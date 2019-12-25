@@ -1,0 +1,15 @@
+set (_CQCPPSDK_DIR ${CMAKE_CURRENT_LIST_DIR})
+message(STATUS "cqcppsdk is in ${_CQCPPSDK_DIR}")
+
+file(GLOB_RECURSE _CQCPPSDK_SOURCE_FILES ${_CQCPPSDK_DIR}/src/core/*.cpp ${_CQCPPSDK_DIR}/src/utils/*.cpp)
+
+function(add_cqapp OUT_NAME SOURCE_FILES)
+    message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
+    if (CQCPPSDK_DEV_MODE)
+        file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/dev_mode/*.cpp)
+        add_executable(${OUT_NAME} ${SOURCE_FILES} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+    else()
+        file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/std_mode/*.cpp)
+        add_library(${OUT_NAME} SHARED ${SOURCE_FILES} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+    endif()
+endfunction()
