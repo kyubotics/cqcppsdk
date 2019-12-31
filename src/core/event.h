@@ -47,6 +47,7 @@ namespace cq {
             static constexpr char *GROUP = "group";
             static constexpr char *DISCUSS = "discuss";
             static constexpr char *OTHER = "other";
+            static constexpr char *UNKNOWN = "unknown";
         };
 
         int32_t message_id;
@@ -71,10 +72,12 @@ namespace cq {
             static constexpr char *SET = "set";
             static constexpr char *LEAVE = "leave";
             static constexpr char *KICK = "kick";
+            static constexpr char *KICK_ME = "kick_me";
             static constexpr char *APPROVE = "approve";
             static constexpr char *INVITE = "invite";
             static constexpr char *LIFT_BAN = "lift_ban";
             static constexpr char *BAN = "ban";
+            static constexpr char *UNKNOWN = "unknown";
         };
     };
 
@@ -93,6 +96,7 @@ namespace cq {
             static constexpr char *DEFAULT = "default";
             static constexpr char *ADD = "add";
             static constexpr char *INVITE = "invite";
+            static constexpr char *UNKNOWN = "unknown";
         };
 
         std::string comment;

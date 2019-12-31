@@ -7,7 +7,12 @@ message(STATUS "cqcppsdk is in ${_CQCPPSDK_DIR}")
 
 file(GLOB_RECURSE _CQCPPSDK_SOURCE_FILES ${_CQCPPSDK_DIR}/src/core/*.cpp ${_CQCPPSDK_DIR}/src/utils/*.cpp)
 
-function(add_cqapp OUT_NAME SOURCE_FILES)
+function(set_cq_app_id APP_ID)
+    message(STATUS "app id: ${APP_ID}")
+    add_definitions(-DAPP_ID="${APP_ID}")
+endfunction()
+
+function(add_cq_app OUT_NAME SOURCE_FILES)
     message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
     if (CQCPPSDK_DEV_MODE)
         # dev 模式，产生可执行文件，用于脱离酷Q单独测试业务逻辑，不限平台

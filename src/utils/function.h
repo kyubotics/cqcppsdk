@@ -17,4 +17,11 @@ namespace cq::utils {
             func(std::forward<Args>(args)...);
         }
     }
+
+    template <typename Cont, typename... Args>
+    static void call_all(Cont funcs, Args &&... args) {
+        for (const auto f : funcs) {
+            if (f) f(std::forward<Args>(args)...);
+        }
+    }
 } // namespace cq::utils
