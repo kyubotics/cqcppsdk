@@ -69,7 +69,7 @@ namespace cq {
         return static_cast<int64_t>(chk(raw::CQ_sendDiscussMsg(__ac, discuss_id, string_to_coolq(message).c_str())));
     }
 
-    void delete_msg(const int64_t message_id) { chk(raw::CQ_deleteMsg(__ac, message_id)); }
+    void delete_message(const int64_t message_id) { chk(raw::CQ_deleteMsg(__ac, message_id)); }
 
 #pragma endregion
 
@@ -89,8 +89,8 @@ namespace cq {
         chk(raw::CQ_setGroupBan(__ac, group_id, user_id, duration));
     }
 
-    void set_group_anonymous_ban(const int64_t group_id, const std::string &flag, const int64_t duration) {
-        chk(raw::CQ_setGroupAnonymousBan(__ac, group_id, string_to_coolq(flag).c_str(), duration));
+    void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration) {
+        chk(raw::CQ_setGroupAnonymousBan(__ac, group_id, string_to_coolq(anonymous_flag).c_str(), duration));
     }
 
     void set_group_whole_ban(const int64_t group_id, const bool enable) {
@@ -157,7 +157,7 @@ namespace cq {
 
 #pragma endregion
 
-#pragma region CoolQ Information
+#pragma region CoolQ
 
     std::string get_cookies(const std::string &domain) {
         return string_from_coolq(chk(raw::CQ_getCookiesV2(__ac, string_to_coolq(domain).c_str())));
@@ -180,6 +180,10 @@ namespace cq {
     bool can_send_image() { return raw::CQ_canSendImage(__ac); }
 
     bool can_send_record() { return raw::CQ_canSendRecord(__ac); }
+
+    void add_log(int32_t level, const std::string &tag, const std::string &message) {
+        chk(raw::CQ_addLog(__ac, level, string_to_coolq(tag).c_str(), string_to_coolq(message).c_str()));
+    }
 
 #pragma endregion
 } // namespace cq

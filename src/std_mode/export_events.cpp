@@ -6,7 +6,7 @@
 #include "../utils/function.h"
 #include "../utils/string.h"
 
-#define __CQ_EVENT(ReturnType, Name, Size)                                                            \
+#define CQ_EVENT(ReturnType, Name, Size)                                                              \
     __pragma(comment(linker, "/EXPORT:" #Name "=_" #Name "@" #Size)) extern "C" __declspec(dllexport) \
         ReturnType __stdcall Name
 
@@ -17,16 +17,18 @@ using utils::string_from_coolq;
 
 // TODO: 本文件需要 review 一下
 
+#pragma region Lifecycle
+
 /**
  * 返回 API 版本和 App Id.
  */
-__CQ_EVENT(const char *, AppInfo, 0)
+CQ_EVENT(const char *, AppInfo, 0)
 () { return "9," APP_ID; }
 
 /**
  * 生命周期: 初始化.
  */
-__CQ_EVENT(int32_t, Initialize, 4)
+CQ_EVENT(int32_t, Initialize, 4)
 (const int32_t auth_code) {
     __ac = auth_code;
     __init();
@@ -38,7 +40,7 @@ __CQ_EVENT(int32_t, Initialize, 4)
 /**
  * 生命周期: 插件启用.
  */
-__CQ_EVENT(int32_t, cq_enable, 0)
+CQ_EVENT(int32_t, cq_enable, 0)
 () {
     call_all(_enable_callbacks);
     return 0;
@@ -47,7 +49,7 @@ __CQ_EVENT(int32_t, cq_enable, 0)
 /**
  * 生命周期: 插件停用.
  */
-__CQ_EVENT(int32_t, cq_disable, 0)
+CQ_EVENT(int32_t, cq_disable, 0)
 () {
     call_all(_disable_callbacks);
     return 0;
@@ -56,7 +58,7 @@ __CQ_EVENT(int32_t, cq_disable, 0)
 /**
  * 生命周期: 酷Q启动.
  */
-__CQ_EVENT(int32_t, cq_coolq_start, 0)
+CQ_EVENT(int32_t, cq_coolq_start, 0)
 () {
     call_all(_coolq_start_callbacks);
     return 0;
@@ -65,17 +67,21 @@ __CQ_EVENT(int32_t, cq_coolq_start, 0)
 /**
  * 生命周期: 酷Q退出.
  */
-__CQ_EVENT(int32_t, cq_coolq_exit, 0)
+CQ_EVENT(int32_t, cq_coolq_exit, 0)
 () {
     call_all(_coolq_exit_callbacks);
     return 0;
 }
 
+#pragma endregion
+
+#pragma region Message
+
 /**
  * Type=21 私聊消息
  * sub_type 子类型，11/来自好友 1/来自在线状态 2/来自群 3/来自讨论组
  */
-__CQ_EVENT(int32_t, cq_event_private_msg, 24)
+CQ_EVENT(int32_t, cq_event_private_msg, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
     using SubType = PrivateMessageEvent::SubType;
     PrivateMessageEvent e;
@@ -110,7 +116,7 @@ __CQ_EVENT(int32_t, cq_event_private_msg, 24)
 /**
  * Type=2 群消息
  */
-__CQ_EVENT(int32_t, cq_event_group_msg, 36)
+CQ_EVENT(int32_t, cq_event_group_msg, 36)
 (int32_t sub_type, int32_t msg_id, int64_t from_group, int64_t from_qq, const char *from_anonymous, const char *msg,
  int32_t font) {
     GroupMessageEvent e;
@@ -130,7 +136,7 @@ __CQ_EVENT(int32_t, cq_event_group_msg, 36)
 /**
  * Type=4 讨论组消息
  */
-__CQ_EVENT(int32_t, cq_event_discuss_msg, 32)
+CQ_EVENT(int32_t, cq_event_discuss_msg, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
     DiscussMessageEvent e;
     e.time = time(nullptr);
@@ -146,10 +152,14 @@ __CQ_EVENT(int32_t, cq_event_discuss_msg, 32)
     return e.operation;
 }
 
+#pragma endregion
+
+#pragma region Notice
+
 /**
  * Type=11 群事件-文件上传
  */
-__CQ_EVENT(int32_t, cq_event_group_upload, 28)
+CQ_EVENT(int32_t, cq_event_group_upload, 28)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file) {
     GroupUploadEvent e;
     e.time = time(nullptr);
@@ -166,7 +176,7 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
  * Type=101 群事件-管理员变动
  * sub_type 子类型，1/被取消管理员 2/被设置管理员
  */
-__CQ_EVENT(int32_t, cq_event_group_admin, 24)
+CQ_EVENT(int32_t, cq_event_group_admin, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t being_operate_qq) {
     using SubType = GroupAdminEvent::SubType;
     GroupAdminEvent e;
@@ -195,7 +205,7 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
  * from_qq 操作者QQ(仅subType为2、3时存在)
  * being_operate_qq 被操作QQ
  */
-__CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
+CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
     using SubType = GroupMemberDecreaseEvent::SubType;
     GroupMemberDecreaseEvent e;
@@ -228,7 +238,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
  * from_qq 操作者QQ(即管理员QQ)
  * being_operate_qq 被操作QQ(即加群的QQ)
  */
-__CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
+CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
     using SubType = GroupMemberIncreaseEvent::SubType;
     GroupMemberIncreaseEvent e;
@@ -260,7 +270,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
  * being_operate_qq 被操作QQ(若为全群禁言/解禁，则本参数为 0)
  * duration 禁言时长(单位 秒，仅子类型为2时可用)
  */
-__CQ_EVENT(int32_t, cq_event_group_ban, 40)
+CQ_EVENT(int32_t, cq_event_group_ban, 40)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq, int64_t duration) {
     using SubType = GroupBanEvent::SubType;
     GroupBanEvent e;
@@ -288,7 +298,7 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 /**
  * Type=201 好友事件-好友已添加
  */
-__CQ_EVENT(int32_t, cq_event_friend_add, 16)
+CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {
     FriendAddEvent e;
     e.time = time(nullptr);
@@ -299,12 +309,16 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
     return e.operation;
 }
 
+#pragma endregion
+
+#pragma region Request
+
 /**
  * Type=301 请求-好友添加
  * msg 附言
  * response_flag 反馈标识(处理请求用)
  */
-__CQ_EVENT(int32_t, cq_event_friend_request, 24)
+CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
     FriendRequestEvent e;
     e.time = time(nullptr);
@@ -323,7 +337,7 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
  * msg 附言
  * response_flag 反馈标识(处理请求用)
  */
-__CQ_EVENT(int32_t, cq_event_group_request, 32)
+CQ_EVENT(int32_t, cq_event_group_request, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *msg, const char *response_flag) {
     using SubType = GroupRequestEvent::SubType;
     GroupRequestEvent e;
@@ -347,3 +361,5 @@ __CQ_EVENT(int32_t, cq_event_group_request, 32)
     call_all(_group_request_callbacks, e);
     return e.operation;
 }
+
+#pragma endregion

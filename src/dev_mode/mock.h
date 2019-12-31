@@ -1,0 +1,3 @@
+#define FAKE_LOGIN_USER_ID 1
+#define FAKE_LOGIN_NICKNAME "cqcppsdk"
+#define FAKE_SENDER_USER_ID 2

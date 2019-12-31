@@ -1,4 +1,4 @@
-#ifndef FUNC
+#if !defined(FUNC)
 #define DEFINED_FUNC_MACRO
 #define FUNC(ReturnType, FuncName, ...)                              \
     typedef ReturnType(__stdcall *__CQ_##FuncName##_T)(__VA_ARGS__); \

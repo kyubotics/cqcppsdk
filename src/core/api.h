@@ -34,13 +34,13 @@ namespace cq {
         throw ApiError(ApiError::INVALID_TARGET);
     }
 
-    void delete_msg(const int64_t message_id);
+    void delete_message(const int64_t message_id);
 
     void send_like(const int64_t user_id, const int32_t times = 1);
 
     void set_group_kick(const int64_t group_id, const int64_t user_id, const bool reject_future_request);
     void set_group_ban(const int64_t group_id, const int64_t user_id, const int64_t duration);
-    void set_group_anonymous_ban(const int64_t group_id, const std::string &flag, const int64_t duration);
+    void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration);
     void set_group_whole_ban(const int64_t group_id, const bool enable);
     void set_group_admin(const int64_t group_id, const int64_t user_id, const bool enable);
     void set_group_anonymous(const int64_t group_id, const bool enable);
@@ -66,4 +66,6 @@ namespace cq {
     std::string get_image(const std::string &file);
     bool can_send_image();
     bool can_send_record();
+
+    void add_log(int32_t level, const std::string &tag, const std::string &message);
 } // namespace cq
