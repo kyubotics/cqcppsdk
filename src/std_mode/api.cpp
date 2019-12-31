@@ -10,6 +10,8 @@
 #include "../utils/string.h"
 
 using namespace std;
+using cq::utils::string_to_coolq;
+using cq::utils::string_from_coolq;
 
 namespace cq {
     static vector<function<void(HMODULE)>> api_func_initializers;
@@ -38,33 +40,146 @@ namespace cq {
     } // namespace raw
 
     template <typename T, typename enable_if<is_integral<T>::value>::type * = 0>
-    inline T chk(const T ret) {
-        if (ret < 0) {
-            throw ApiError(static_cast<int>(ret));
+    inline T chk(const T res) {
+        if (res < 0) {
+            throw ApiError(static_cast<int>(res));
         }
-        return ret;
+        return res;
     }
 
     template <typename T, typename enable_if<is_pointer<T>::value>::type * = 0>
-    inline T chk(const T ret_ptr) {
-        if (!ret_ptr) {
+    inline T chk(const T res_ptr) {
+        if (!res_ptr) {
             throw ApiError(ApiError::INVALID_DATA);
         }
-        return ret;
+        return res_ptr;
     }
 
+#pragma region Message
+
     int64_t send_private_message(const int64_t user_id, const std::string &message) {
-        const auto ret = raw::CQ_sendPrivateMsg(__ac, user_id, utils::string_to_coolq(message).c_str());
-        return static_cast<int64_t>(chk(ret));
+        return static_cast<int64_t>(chk(raw::CQ_sendPrivateMsg(__ac, user_id, string_to_coolq(message).c_str())));
     }
 
     int64_t send_group_message(const int64_t group_id, const std::string &message) {
-        const auto ret = raw::CQ_sendGroupMsg(__ac, group_id, utils::string_to_coolq(message).c_str());
-        return static_cast<int64_t>(chk(ret));
+        return static_cast<int64_t>(chk(raw::CQ_sendGroupMsg(__ac, group_id, string_to_coolq(message).c_str())));
     }
 
     int64_t send_discuss_message(const int64_t discuss_id, const std::string &message) {
-        const auto ret = raw::CQ_sendDiscussMsg(__ac, discuss_id, utils::string_to_coolq(message).c_str());
-        return static_cast<int64_t>(chk(ret));
+        return static_cast<int64_t>(chk(raw::CQ_sendDiscussMsg(__ac, discuss_id, string_to_coolq(message).c_str())));
     }
+
+    void delete_msg(const int64_t message_id) { chk(raw::CQ_deleteMsg(__ac, message_id)); }
+
+#pragma endregion
+
+#pragma region Friend Operation
+
+    void send_like(const int64_t user_id, const int32_t times) { chk(raw::CQ_sendLikeV2(__ac, user_id, times)); }
+
+#pragma endregion
+
+#pragma region Group Operation
+
+    void set_group_kick(const int64_t group_id, const int64_t user_id, const bool reject_future_request) {
+        chk(raw::CQ_setGroupKick(__ac, group_id, user_id, reject_future_request));
+    }
+
+    void set_group_ban(const int64_t group_id, const int64_t user_id, const int64_t duration) {
+        chk(raw::CQ_setGroupBan(__ac, group_id, user_id, duration));
+    }
+
+    void set_group_anonymous_ban(const int64_t group_id, const std::string &flag, const int64_t duration) {
+        chk(raw::CQ_setGroupAnonymousBan(__ac, group_id, string_to_coolq(flag).c_str(), duration));
+    }
+
+    void set_group_whole_ban(const int64_t group_id, const bool enable) {
+        chk(raw::CQ_setGroupWholeBan(__ac, group_id, enable));
+    }
+
+    void set_group_admin(const int64_t group_id, const int64_t user_id, const bool enable) {
+        chk(raw::CQ_setGroupAdmin(__ac, group_id, user_id, enable));
+    }
+
+    void set_group_anonymous(const int64_t group_id, const bool enable) {
+        chk(raw::CQ_setGroupAnonymous(__ac, group_id, enable));
+    }
+
+    void set_group_card(const int64_t group_id, const int64_t user_id, const std::string &card) {
+        chk(raw::CQ_setGroupCard(__ac, group_id, user_id, string_to_coolq(card).c_str()));
+    }
+
+    void set_group_leave(const int64_t group_id, const bool dismiss) {
+        chk(raw::CQ_setGroupLeave(__ac, group_id, dismiss));
+    }
+
+    void set_group_special_title(const int64_t group_id, const int64_t user_id, const std::string &special_title,
+                                 const int64_t duration) {
+        chk(raw::CQ_setGroupSpecialTitle(__ac, group_id, user_id, string_to_coolq(special_title).c_str(), duration));
+    }
+
+    void set_discuss_leave(const int64_t discuss_id) { chk(raw::CQ_setDiscussLeave(__ac, discuss_id)); }
+
+#pragma endregion
+
+#pragma region Request
+
+    void set_friend_request(const std::string &flag, const RequestEvent::Operation operation,
+                            const std::string &remark) {
+        chk(raw::CQ_setFriendAddRequest(
+            __ac, string_to_coolq(flag).c_str(), static_cast<int32_t>(operation), string_to_coolq(remark).c_str()));
+    }
+
+    void set_group_request(const std::string &flag, const std::string &sub_type,
+                           const RequestEvent::Operation operation, const std::string &reason) {
+        int32_t sub_type_i = 0;
+        if (sub_type == GroupRequestEvent::SubType::ADD) {
+            sub_type_i = 1;
+        } else if (sub_type == GroupRequestEvent::SubType::INVITE) {
+            sub_type_i = 2;
+        } else {
+            throw ApiError(ApiError::INVALID_ARGS);
+        }
+        chk(raw::CQ_setGroupAddRequestV2(__ac,
+                                         string_to_coolq(flag).c_str(),
+                                         sub_type_i,
+                                         static_cast<int32_t>(operation),
+                                         string_to_coolq(reason).c_str()));
+    }
+
+#pragma endregion
+
+#pragma region QQ Information
+
+    int64_t get_login_user_id() { return raw::CQ_getLoginQQ(__ac); }
+
+    std::string get_login_nickname() { return string_from_coolq(chk(raw::CQ_getLoginNick(__ac))); }
+
+#pragma endregion
+
+#pragma region CoolQ Information
+
+    std::string get_cookies(const std::string &domain) {
+        return string_from_coolq(chk(raw::CQ_getCookiesV2(__ac, string_to_coolq(domain).c_str())));
+    }
+
+    int32_t get_csrf_token() { return chk(raw::CQ_getCsrfToken(__ac)); }
+
+    std::string get_app_directory() { return string_from_coolq(chk(raw::CQ_getAppDirectory(__ac))); }
+
+    std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
+        return string_from_coolq(chk(
+            full_path ? raw::CQ_getRecordV2(__ac, string_to_coolq(file).c_str(), string_to_coolq(out_format).c_str())
+                      : raw::CQ_getRecord(__ac, string_to_coolq(file).c_str(), string_to_coolq(out_format).c_str())));
+    }
+
+    std::string get_image(const std::string &file) {
+        return string_from_coolq(chk(raw::CQ_getImage(__ac, string_to_coolq(file).c_str())));
+    }
+
+    bool can_send_image() { return raw::CQ_canSendImage(__ac); }
+
+    bool can_send_record() { return raw::CQ_canSendRecord(__ac); }
+
+#pragma endregion
 } // namespace cq
