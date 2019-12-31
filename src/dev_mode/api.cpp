@@ -156,7 +156,55 @@ namespace cq {
 
     std::string get_login_nickname() {
         cout << "get_login_nickname" << endl;
-        return FAKE_LOGIN_NICKNAME;
+        return FAKE_NICKNAME;
+    }
+
+    User get_stranger_info(const int64_t user_id, const bool no_cache) {
+        cout << "get_stranger_info" << endl;
+        cout << "  user_id: " << user_id << endl;
+        cout << "  no_cache: " << no_cache << endl;
+        User u;
+        u.user_id = user_id;
+        u.nickname = FAKE_NICKNAME;
+        u.sex = Sex::MALE;
+        u.age = 20;
+        return u;
+    }
+
+    std::vector<Friend> get_friend_list() {
+        cout << "get_friend_list" << endl;
+        Friend f;
+        f.user_id = FAKE_SENDER_USER_ID;
+        f.nickname = FAKE_NICKNAME;
+        f.sex = Sex::FEMALE;
+        f.age = 20;
+        f.remark = FAKE_NAME;
+        return {f};
+    }
+
+    std::vector<Group> get_group_list() {
+        cout << "get_group_list" << endl;
+        return {};
+    }
+
+    Group get_group_info(const int64_t group_id, const bool no_cache) {
+        cout << "get_group_info" << endl;
+        cout << "  no_cache: " << no_cache << endl;
+        return Group();
+    }
+
+    std::vector<GroupMember> get_group_member_list(const int64_t group_id) {
+        cout << "get_group_member_list" << endl;
+        cout << "  group_id: " << group_id << endl;
+        return {};
+    }
+
+    GroupMember get_group_member_info(const int64_t group_id, const int64_t user_id, const bool no_cache) {
+        cout << "get_group_member_info" << endl;
+        cout << "  group_id: " << group_id << endl;
+        cout << "  user_id: " << user_id << endl;
+        cout << "  no_cache: " << no_cache << endl;
+        return GroupMember();
     }
 
 #pragma endregion

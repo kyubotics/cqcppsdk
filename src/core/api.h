@@ -4,6 +4,7 @@
 
 #include "./event.h"
 #include "./exception.h"
+#include "./type.h"
 
 namespace cq {
     struct ApiError : RuntimeError {
@@ -57,6 +58,13 @@ namespace cq {
 
     int64_t get_login_user_id();
     std::string get_login_nickname();
+    User get_stranger_info(const int64_t user_id, const bool no_cache = false);
+    std::vector<Friend> get_friend_list();
+    std::vector<Group> get_group_list();
+    Group get_group_info(const int64_t group_id, const bool no_cache = false);
+    std::vector<GroupMember> get_group_member_list(const int64_t group_id);
+    GroupMember get_group_member_info(const int64_t group_id, const int64_t user_id, const bool no_cache = false);
+    inline User get_login_info() { return get_stranger_info(get_login_user_id()); }
 
     std::string get_cookies(const std::string &domain = "");
     int32_t get_csrf_token();

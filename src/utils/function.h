@@ -21,7 +21,7 @@ namespace cq::utils {
     template <typename Cont, typename... Args>
     static void call_all(Cont funcs, Args &&... args) {
         for (const auto f : funcs) {
-            if (f) f(std::forward<Args>(args)...);
+            call_if_valid(f, std::forward<Args>(args)...);
         }
     }
 } // namespace cq::utils
