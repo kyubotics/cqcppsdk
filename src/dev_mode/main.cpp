@@ -23,11 +23,10 @@ static void process(string msg) {
     e.sub_type = PrivateMessageEvent::SubType::FRIEND;
     e.target = Target::user(FAKE_SENDER_USER_ID);
     e.message_id = ++message_id;
-    e.raw_message = msg; // TODO: 从控制台读取字符串可能不是 UTF-8
-    e.message = e.raw_message;
+    e.message = msg;
     e.font = 0;
     e.user_id = FAKE_SENDER_USER_ID;
-    utils::call_all(_private_message_callbacks, e);
+    call_all(_private_message_callbacks, e);
 }
 
 static void sig_handler(int signum) { call_all(cq::_coolq_exit_callbacks); }

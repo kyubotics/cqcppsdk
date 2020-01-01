@@ -176,8 +176,6 @@ namespace cq {
         Friend f;
         f.user_id = FAKE_SENDER_USER_ID;
         f.nickname = FAKE_NICKNAME;
-        f.sex = Sex::FEMALE;
-        f.age = 20;
         f.remark = FAKE_NAME;
         return {f};
     }
