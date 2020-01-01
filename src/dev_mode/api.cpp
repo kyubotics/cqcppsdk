@@ -226,13 +226,13 @@ namespace cq {
         return "";
     }
 
-    std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
-        cout << "get_record" << endl;
+    std::string get_image(const std::string &file) {
+        cout << "get_image" << endl;
         return "";
     }
 
-    std::string get_image(const std::string &file) {
-        cout << "get_image" << endl;
+    std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
+        cout << "get_record" << endl;
         return "";
     }
 

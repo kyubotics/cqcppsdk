@@ -221,14 +221,14 @@ namespace cq {
 
     std::string get_app_directory() { return string_from_coolq(chk(raw::CQ_getAppDirectory(__ac))); }
 
+    std::string get_image(const std::string &file) {
+        return string_from_coolq(chk(raw::CQ_getImage(__ac, string_to_coolq(file).c_str())));
+    }
+
     std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
         return string_from_coolq(chk(
             full_path ? raw::CQ_getRecordV2(__ac, string_to_coolq(file).c_str(), string_to_coolq(out_format).c_str())
                       : raw::CQ_getRecord(__ac, string_to_coolq(file).c_str(), string_to_coolq(out_format).c_str())));
-    }
-
-    std::string get_image(const std::string &file) {
-        return string_from_coolq(chk(raw::CQ_getImage(__ac, string_to_coolq(file).c_str())));
     }
 
     bool can_send_image() { return raw::CQ_canSendImage(__ac); }

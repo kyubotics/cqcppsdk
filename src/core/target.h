@@ -3,6 +3,7 @@
 #include "./common.h"
 
 namespace cq {
+    // 用于表示触发事件的主体和指定消息发送目标
     struct Target {
         std::optional<int64_t> user_id;
         std::optional<int64_t> group_id;
@@ -30,8 +31,11 @@ namespace cq {
             this->user_id = user_id;
         }
 
+        // 用户
         static Target user(const int64_t user_id) { return Target(user_id, USER); }
+        // 群
         static Target group(const int64_t group_id) { return Target(group_id, GROUP); }
+        // 讨论组
         static Target discuss(const int64_t discuss_id) { return Target(discuss_id, DISCUSS); }
     };
 } // namespace cq

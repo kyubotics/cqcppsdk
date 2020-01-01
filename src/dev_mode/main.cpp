@@ -13,7 +13,7 @@ using namespace std;
 using namespace cq;
 using cq::utils::call_all;
 
-static void prompt() { cout << ">>> "; }
+static void prompt() { cout << endl << ">>> "; }
 
 static void process(string msg) {
     static int message_id = 0;

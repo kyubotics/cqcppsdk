@@ -8,19 +8,14 @@
 
 namespace cq {
     struct ObjectHelper {
-        /**
-         * Parse an object from a given base64 string.
-         * This is prefered to "T::from_bytes" because it may have extra behaviors.
-         */
+        // 从 Base64 字符串解析数据对象,
+        // 注意, 与 T::from_bytes 不同, 后者从二进制数据中提取对象
         template <typename T>
         static T from_base64(const std::string &b64) {
             return T::from_bytes(utils::base64_decode(b64));
         }
 
-        /**
-         * Parse multiple objects from a given base64 string.
-         * This is prefered to "T::from_bytes" because it may have extra behaviors.
-         */
+        // 从 Base64 字符串解析数据对象集合
         template <typename Container>
         static Container multi_from_base64(const std::string &b64) {
             Container result;
@@ -38,17 +33,28 @@ namespace cq {
         }
     };
 
-    enum class Sex { MALE = 0, FEMALE = 1, UNKNOWN = 255 };
+    // 性别
+    enum class Sex {
+        MALE = 0, // 男
+        FEMALE = 1, // 女
+        UNKNOWN = 255, // 未知
+    };
 
-    enum class GroupRole { MEMBER = 1, ADMIN = 2, OWNER = 3 };
+    // 群成员角色
+    enum class GroupRole {
+        MEMBER = 1, // 普通成员
+        ADMIN = 2, // 管理员
+        OWNER = 3, // 群主
+    };
 
+    // 用户信息
     struct User {
         const static size_t MIN_SIZE = 18;
 
-        int64_t user_id = 0;
-        std::string nickname;
-        Sex sex = Sex::UNKNOWN;
-        int32_t age = 0;
+        int64_t user_id = 0; // 用户 Id (QQ 号)
+        std::string nickname; // 昵称
+        Sex sex = Sex::UNKNOWN; // 性别
+        int32_t age = 0; // 年龄
 
         static User from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);
@@ -65,14 +71,13 @@ namespace cq {
         }
     };
 
+    // 好友信息
     struct Friend : User {
         const static size_t MIN_SIZE = 12;
 
-        // int64_t user_id; // from User
-        // std::string nickname; // from User
-        std::string remark;
-        // Sex sex; // from User, not using
-        // int32_t age; // from User, not using
+        // int64_t user_id; // 继承自 User 类
+        // std::string nickname; // 继承自 User 类
+        std::string remark; // 备注
 
         static Friend from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);
@@ -86,15 +91,20 @@ namespace cq {
             }
             return frnd;
         }
+
+    private:
+        Sex sex; // 屏蔽 User 类的 sex 属性
+        int32_t age; // 屏蔽 User 类的 age 属性
     };
 
+    // 群信息
     struct Group {
         const static size_t MIN_SIZE = 10;
 
-        int64_t group_id = 0;
-        std::string group_name;
-        int32_t member_count = 0; // only available with get_group_info()
-        int32_t max_member_count = 0; // only available with get_group_info()
+        int64_t group_id = 0; // 群号
+        std::string group_name; // 群名
+        int32_t member_count = 0; // 成员数, 仅 get_group_info() 返回
+        int32_t max_member_count = 0; // 最大成员数(容量), 仅 get_group_info() 返回
 
         static Group from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);
@@ -103,7 +113,8 @@ namespace cq {
                 group.group_id = pack.pop_int<int64_t>();
                 group.group_name = pack.pop_string();
                 try {
-                    // optional, since this method should work for both get_group_list() and get_group_info()
+                    // 尝试获取 member_count 和 max_member_count,
+                    // 如果正在处理的是 get_group_list() 的返回结果, 会失败, 将忽略异常继续
                     group.member_count = pack.pop_int<int32_t>();
                     group.max_member_count = pack.pop_int<int32_t>();
                 } catch (BytesNotEnough &ignored) {
@@ -115,24 +126,25 @@ namespace cq {
         }
     };
 
+    // 群成员信息
     struct GroupMember : User {
         const static size_t MIN_SIZE = 58;
 
-        int64_t group_id = 0;
-        // int64_t user_id; // from User
-        // std::string nickname; // from User
-        std::string card;
-        // Sex sex; // from User
-        // int32_t age; // from User
-        std::string area;
-        int32_t join_time = 0;
-        int32_t last_sent_time = 0;
-        std::string level;
-        GroupRole role = GroupRole::MEMBER;
-        bool unfriendly = false;
-        std::string title;
-        int32_t title_expire_time = 0;
-        bool card_changeable = false;
+        int64_t group_id = 0; // 群号
+        // int64_t user_id; // 继承自 User 类
+        // std::string nickname; // 继承自 User 类
+        std::string card; // 名片(现在为群昵称)
+        // Sex sex; // 继承自 User 类
+        // int32_t age; // 继承自 User 类
+        std::string area; // 地区
+        int32_t join_time = 0; // 入群时间
+        int32_t last_sent_time = 0; // 最近发言时间
+        std::string level; // 等级
+        GroupRole role = GroupRole::MEMBER; // 角色(权限)
+        bool unfriendly = false; // 是否有不良记录
+        std::string title; // 头衔
+        int32_t title_expire_time = 0; // 头衔过期时间
+        bool card_changeable = false; // 是否可修改名片
 
         static GroupMember from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);
@@ -160,13 +172,14 @@ namespace cq {
         }
     };
 
+    // 匿名信息
     struct Anonymous {
         const static size_t MIN_SIZE = 12;
 
-        int64_t id = 0;
-        std::string name;
-        std::string token; // binary
-        std::string flag; // base64 of the whole Anonymous object
+        int64_t id = 0; // Id, 具体含义不明
+        std::string name; // 匿名昵称
+        std::string token; // 一串二进制数据, 具体含义不明
+        std::string flag; // 整个 Anonymous 对象的 Base64 编码字符串, 可视为匿名标识
 
         static Anonymous from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);
@@ -175,9 +188,7 @@ namespace cq {
                 anonymous.id = pack.pop_int<int64_t>();
                 anonymous.name = pack.pop_string();
                 anonymous.token = pack.pop_token();
-                // NOTE: we don't initialize "flag" here because it represents the
-                // whole object it will be initialized in the specialized
-                // ObjectHelper::from_base64 function
+                // 注意: 这里不给 flag 属性赋值, 而是在下面特化的 ObjectHelper::from_base64 函数中赋值
             } catch (BytesNotEnough &) {
                 throw ParseError("failed to parse from bytes to an Anonymous object");
             }
@@ -192,13 +203,14 @@ namespace cq {
         return anonymous;
     }
 
+    // 文件信息
     struct File {
         const static size_t MIN_SIZE = 20;
 
-        std::string id;
-        std::string name;
-        int64_t size = 0;
-        int64_t busid = 0;
+        std::string id; // Id
+        std::string name; // 名称
+        int64_t size = 0; // 大小(字节)
+        int64_t busid = 0; // 某种 Id, 具体含义不明
 
         static File from_bytes(const std::string &bytes) {
             auto pack = utils::BinPack(bytes);

@@ -7,26 +7,40 @@
 #include "./type.h"
 
 namespace cq {
+    // API 调用失败
     struct ApiError : RuntimeError {
-        int code;
         ApiError(const int code) : RuntimeError("failed to call coolq api") { this->code = code; }
 
-        static const auto INVALID_DATA = 100;
-        static const auto INVALID_TARGET = 101;
-        static const auto INVALID_ARGS = 102;
+        int code; // 错误码
+
+        static const auto INVALID_DATA = 100; // 酷Q返回的数据无效
+        static const auto INVALID_TARGET = 101; // 发送目标无效
+        static const auto INVALID_ARGS = 102; // 参数无效
     };
 
     void __init_api();
 
+    // 发送私聊消息
     int64_t send_private_message(const int64_t user_id, const std::string &message);
+    // 发送群消息
     int64_t send_group_message(const int64_t group_id, const std::string &message);
+    // 发送讨论组消息
     int64_t send_discuss_message(const int64_t discuss_id, const std::string &message);
 
+    // 向 target 指定的目标发送消息
     inline int64_t send_message(const Target &target, const std::string &message) {
         if (target.group_id.has_value()) {
+            if (target.user_id.has_value()) {
+                return send_group_message(target.group_id.value(),
+                                          "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+            }
             return send_group_message(target.group_id.value(), message);
         }
         if (target.discuss_id.has_value()) {
+            if (target.user_id.has_value()) {
+                return send_discuss_message(target.discuss_id.value(),
+                                            "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+            }
             return send_discuss_message(target.discuss_id.value(), message);
         }
         if (target.user_id.has_value()) {
@@ -35,45 +49,76 @@ namespace cq {
         throw ApiError(ApiError::INVALID_TARGET);
     }
 
+    // 撤回消息(可撤回自己 2 分钟内发的消息和比自己更低权限的群成员发的消息)
     void delete_message(const int64_t message_id);
 
+    // 发送好友赞
     void send_like(const int64_t user_id, const int32_t times = 1);
 
+    // 群踢人
     void set_group_kick(const int64_t group_id, const int64_t user_id, const bool reject_future_request);
+    // 群禁言成员
     void set_group_ban(const int64_t group_id, const int64_t user_id, const int64_t duration);
+    // 群禁言匿名用户
     void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration);
+    // 群全体禁言
     void set_group_whole_ban(const int64_t group_id, const bool enable);
+    // 群设置管理员
     void set_group_admin(const int64_t group_id, const int64_t user_id, const bool enable);
+    // 群开关匿名
     void set_group_anonymous(const int64_t group_id, const bool enable);
+    // 群设置成员名片(群昵称)
     void set_group_card(const int64_t group_id, const int64_t user_id, const std::string &card);
+    // 退出群(若自己是群主且 dismiss 是 true 则解散群)
     void set_group_leave(const int64_t group_id, const bool dismiss);
+    // 群设置成员专属头衔
     void set_group_special_title(const int64_t group_id, const int64_t user_id, const std::string &special_title,
                                  const int64_t duration);
+    // 退出讨论组
     void set_discuss_leave(const int64_t discuss_id);
 
+    // 处理好友请求
     void set_friend_request(const std::string &flag, const RequestEvent::Operation operation,
                             const std::string &remark = "");
+    // 处理群请求
     void set_group_request(const std::string &flag, const std::string &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason = "");
 
+    // 获取登录号 Id (QQ 号)
     int64_t get_login_user_id();
+    // 获取登录号昵称
     std::string get_login_nickname();
+    // 获取陌生人信息
     User get_stranger_info(const int64_t user_id, const bool no_cache = false);
+    // 获取好友列表
     std::vector<Friend> get_friend_list();
+    // 获取群列表
     std::vector<Group> get_group_list();
+    // 获取群信息
     Group get_group_info(const int64_t group_id, const bool no_cache = false);
+    // 获取群成员列表
     std::vector<GroupMember> get_group_member_list(const int64_t group_id);
+    // 获取群成员信息
     GroupMember get_group_member_info(const int64_t group_id, const int64_t user_id, const bool no_cache = false);
+    // 获取登录号信息
     inline User get_login_info() { return get_stranger_info(get_login_user_id()); }
 
+    // 获取 cookies
     std::string get_cookies(const std::string &domain = "");
+    // 获取 CSRF Token (即 bkn)
     int32_t get_csrf_token();
+    // 获取插件数据目录
     std::string get_app_directory();
 
-    std::string get_record(const std::string &file, const std::string &out_format, const bool full_path = true);
+    // 获取图片文件
     std::string get_image(const std::string &file);
+    // 获取语音文件
+    std::string get_record(const std::string &file, const std::string &out_format, const bool full_path = true);
+    // 检查是否可以发送图片
     bool can_send_image();
+    // 检查是否可以发送语音
     bool can_send_record();
 
+    // 添加日志(建议使用 cq::logging 模块, 而不是直接使用此函数)
     void add_log(int32_t level, const std::string &tag, const std::string &message);
 } // namespace cq

@@ -105,8 +105,7 @@ CQ_EVENT(int32_t, cq_event_private_msg, 24)
     }
     e.target = Target(from_qq);
     e.message_id = msg_id;
-    e.raw_message = string_from_coolq(msg);
-    e.message = e.raw_message;
+    e.message = string_from_coolq(msg);
     e.font = font;
     e.user_id = from_qq;
     call_all(_private_message_callbacks, e);
@@ -124,11 +123,14 @@ CQ_EVENT(int32_t, cq_event_group_msg, 36)
     e.sub_type = GroupMessageEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_group, Target::GROUP);
     e.message_id = msg_id;
-    e.raw_message = string_from_coolq(msg);
-    e.message = e.raw_message; // TODO: 处理 Air 的匿名消息特殊情况
+    e.message = string_from_coolq(msg);
     e.font = font;
     e.user_id = from_qq;
     e.group_id = from_group;
+    try {
+        e.anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous));
+    } catch (ParseError &) {
+    }
     call_all(_group_message_callbacks, e);
     return e.operation;
 }
@@ -143,8 +145,7 @@ CQ_EVENT(int32_t, cq_event_discuss_msg, 32)
     e.sub_type = DiscussMessageEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_discuss, Target::DISCUSS);
     e.message_id = msg_id;
-    e.raw_message = string_from_coolq(msg);
-    e.message = e.raw_message;
+    e.message = string_from_coolq(msg);
     e.font = font;
     e.user_id = from_qq;
     e.discuss_id = from_discuss;
@@ -165,9 +166,12 @@ CQ_EVENT(int32_t, cq_event_group_upload, 28)
     e.time = time(nullptr);
     e.sub_type = GroupUploadEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_group, Target::GROUP);
-    // TODO: e.file
     e.user_id = from_qq;
     e.group_id = from_group;
+    try {
+        e.file = ObjectHelper::from_base64<File>(string_from_coolq(file));
+    } catch (ParseError &) {
+    }
     call_all(_group_upload_callbacks, e);
     return e.operation;
 }
@@ -218,11 +222,14 @@ CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
         e.sub_type = SubType::KICK;
         break;
     case 3:
-        e.sub_type = SubType::KICK_ME; // TODO: 检查 kick 子类型的 being_operate_qq
+        e.sub_type = SubType::KICK_ME;
         break;
     default:
         e.sub_type = SubType::UNKNOWN;
         break;
+    }
+    if (being_operate_qq == get_login_user_id() && e.sub_type == SubType::KICK) {
+        e.sub_type = SubType::KICK_ME;
     }
     e.target = Target(being_operate_qq, from_group, Target::GROUP);
     e.user_id = being_operate_qq;
