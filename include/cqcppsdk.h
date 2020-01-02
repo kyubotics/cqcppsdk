@@ -5,3 +5,4 @@
 #include "../src/core/exception.h"
 #include "../src/core/init.h"
 #include "../src/core/logging.h"
+#include "../src/core/menu.h"
