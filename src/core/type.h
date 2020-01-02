@@ -117,7 +117,7 @@ namespace cq {
                     // 如果正在处理的是 get_group_list() 的返回结果, 会失败, 将忽略异常继续
                     group.member_count = pack.pop_int<int32_t>();
                     group.max_member_count = pack.pop_int<int32_t>();
-                } catch (BytesNotEnough &ignored) {
+                } catch (BytesNotEnough &) {
                 }
             } catch (BytesNotEnough &) {
                 throw ParseError("failed to parse from bytes to a Group object");
