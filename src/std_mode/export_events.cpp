@@ -12,8 +12,6 @@ using namespace cq;
 using utils::call_all;
 using utils::string_from_coolq;
 
-// TODO: 本文件需要 review 一下
-
 #pragma region Lifecycle
 
 /**
