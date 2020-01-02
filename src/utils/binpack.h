@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../core/common.h"
-
 #include "../core/exception.h"
 #include "./string.h"
 
@@ -32,7 +31,7 @@ namespace cq::utils {
             std::reverse(s.begin(), s.end());
 
             IntType result;
-            memcpy(static_cast<void *>(&result), s.data(), size);
+            std::memcpy(static_cast<void *>(&result), s.data(), size);
             return result;
         }
 

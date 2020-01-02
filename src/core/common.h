@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <any>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 #include <functional>
 #include <list>

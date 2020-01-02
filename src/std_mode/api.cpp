@@ -221,6 +221,14 @@ namespace cq {
 
     std::string get_app_directory() { return string_from_coolq(chk(raw::CQ_getAppDirectory(__ac))); }
 
+    std::string get_coolq_root_directory() {
+        constexpr size_t size = 1024;
+        wchar_t w_exec_path[size]{};
+        GetModuleFileNameW(nullptr, w_exec_path, size); // 此调用可获取到 "C:\\Path\\To\\CQ\\CQA.exe"
+        auto exec_path = utils::ws2s(w_exec_path);
+        return exec_path.substr(0, exec_path.rfind("\\")) + "\\";
+    }
+
     std::string get_image(const std::string &file) {
         return string_from_coolq(chk(raw::CQ_getImage(__ac, string_to_coolq(file).c_str())));
     }

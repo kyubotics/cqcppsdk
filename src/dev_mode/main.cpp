@@ -21,11 +21,11 @@ static void process(string msg) {
     PrivateMessageEvent e;
     e.time = time(nullptr);
     e.sub_type = PrivateMessageEvent::SubType::FRIEND;
-    e.target = Target::user(FAKE_SENDER_USER_ID);
+    e.target = Target::user(FAKE_OTHER_USER_ID);
     e.message_id = ++message_id;
     e.message = msg;
     e.font = 0;
-    e.user_id = FAKE_SENDER_USER_ID;
+    e.user_id = FAKE_OTHER_USER_ID;
     call_all(_private_message_callbacks, e);
 }
 

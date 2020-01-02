@@ -4,11 +4,14 @@
 
 #include "../core/api.h"
 
+#include <filesystem>
 #include <iostream>
 
+#include "../core/dir.h"
 #include "./mock.h"
 
 using namespace std;
+namespace fs = filesystem;
 
 namespace cq {
     void __init_api() {}
@@ -156,7 +159,7 @@ namespace cq {
 
     std::string get_login_nickname() {
         cout << "get_login_nickname" << endl;
-        return FAKE_NICKNAME;
+        return FAKE_LOGIN_NICKNAME;
     }
 
     User get_stranger_info(const int64_t user_id, const bool no_cache) {
@@ -165,7 +168,7 @@ namespace cq {
         cout << "  no_cache: " << no_cache << endl;
         User u;
         u.user_id = user_id;
-        u.nickname = FAKE_NICKNAME;
+        u.nickname = FAKE_OTHER_NICKNAME;
         u.sex = Sex::MALE;
         u.age = 20;
         return u;
@@ -174,8 +177,8 @@ namespace cq {
     std::vector<Friend> get_friend_list() {
         cout << "get_friend_list" << endl;
         Friend f;
-        f.user_id = FAKE_SENDER_USER_ID;
-        f.nickname = FAKE_NICKNAME;
+        f.user_id = FAKE_OTHER_USER_ID;
+        f.nickname = FAKE_OTHER_NICKNAME;
         f.remark = FAKE_NAME;
         return {f};
     }
@@ -221,7 +224,16 @@ namespace cq {
 
     std::string get_app_directory() {
         cout << "get_app_directory" << endl;
-        return "";
+        const auto app_dir = fs::path(get_coolq_root_directory()) / "data" / "app" / "";
+        dir::create_dir_if_not_exists(app_dir.string());
+        return app_dir.string();
+    }
+
+    std::string get_coolq_root_directory() {
+        cout << "get_coolq_root_directory" << endl;
+        string root_dir = FAKE_COOLQ_ROOT_DIR;
+        dir::create_dir_if_not_exists(root_dir);
+        return fs::absolute(root_dir).string();
     }
 
     std::string get_image(const std::string &file) {
