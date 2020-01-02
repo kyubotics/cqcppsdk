@@ -40,7 +40,7 @@ CQ_EVENT(int32_t, Initialize, 4)
 /**
  * 生命周期: 插件启用.
  */
-CQ_EVENT(int32_t, cq_enable, 0)
+CQ_EVENT(int32_t, cq_event_enable, 0)
 () {
     call_all(_enable_callbacks);
     return 0;
@@ -49,7 +49,7 @@ CQ_EVENT(int32_t, cq_enable, 0)
 /**
  * 生命周期: 插件停用.
  */
-CQ_EVENT(int32_t, cq_disable, 0)
+CQ_EVENT(int32_t, cq_event_disable, 0)
 () {
     call_all(_disable_callbacks);
     return 0;
@@ -58,7 +58,7 @@ CQ_EVENT(int32_t, cq_disable, 0)
 /**
  * 生命周期: 酷Q启动.
  */
-CQ_EVENT(int32_t, cq_coolq_start, 0)
+CQ_EVENT(int32_t, cq_event_coolq_start, 0)
 () {
     call_all(_coolq_start_callbacks);
     return 0;
@@ -67,7 +67,7 @@ CQ_EVENT(int32_t, cq_coolq_start, 0)
 /**
  * 生命周期: 酷Q退出.
  */
-CQ_EVENT(int32_t, cq_coolq_exit, 0)
+CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
 () {
     call_all(_coolq_exit_callbacks);
     return 0;
@@ -81,7 +81,7 @@ CQ_EVENT(int32_t, cq_coolq_exit, 0)
  * Type=21 私聊消息
  * sub_type 子类型，11/来自好友 1/来自在线状态 2/来自群 3/来自讨论组
  */
-CQ_EVENT(int32_t, cq_event_private_msg, 24)
+CQ_EVENT(int32_t, cq_event_private_message, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
     using SubType = PrivateMessageEvent::SubType;
     PrivateMessageEvent e;
@@ -115,7 +115,7 @@ CQ_EVENT(int32_t, cq_event_private_msg, 24)
 /**
  * Type=2 群消息
  */
-CQ_EVENT(int32_t, cq_event_group_msg, 36)
+CQ_EVENT(int32_t, cq_event_group_message, 36)
 (int32_t sub_type, int32_t msg_id, int64_t from_group, int64_t from_qq, const char *from_anonymous, const char *msg,
  int32_t font) {
     GroupMessageEvent e;
@@ -138,7 +138,7 @@ CQ_EVENT(int32_t, cq_event_group_msg, 36)
 /**
  * Type=4 讨论组消息
  */
-CQ_EVENT(int32_t, cq_event_discuss_msg, 32)
+CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
     DiscussMessageEvent e;
     e.time = time(nullptr);
