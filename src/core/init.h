@@ -3,8 +3,8 @@
 #include "./common.h"
 
 namespace cq {
-    extern int32_t __ac; // Auth Code, 在 CQ 的 Initialize 事件中获得
-    extern void (*__init)(); // 初始化函数, 在 CQ 的 Initialize 事件中调用
+    extern int32_t __ac; // Auth Code, 在酷Q的 Initialize 事件中获得
+    extern void (*__init)(); // 初始化函数, 在酷Q的 Initialize 事件中调用
 } // namespace cq
 
 #define CQ_INIT                                      \
