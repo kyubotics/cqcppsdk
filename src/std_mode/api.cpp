@@ -151,7 +151,7 @@ namespace cq {
 
 #pragma region QQ Information
 
-    int64_t get_login_user_id() { return raw::CQ_getLoginQQ(__ac); }
+    int64_t get_login_user_id() { return chk(raw::CQ_getLoginQQ(__ac)); }
 
     std::string get_login_nickname() { return string_from_coolq(chk(raw::CQ_getLoginNick(__ac))); }
 

@@ -34,7 +34,7 @@ namespace cq {
         };
 
         mutable Operation operation = IGNORE;
-        // 阻止事件传递给下一个插件
+        // 阻止事件传递给下一个应用
         void block() const { operation = BLOCK; }
     };
 
@@ -68,7 +68,7 @@ namespace cq {
             static constexpr char *GROUP_MEMBER_DECREASE = "group_member_decrease"; // 群成员减少
             static constexpr char *GROUP_MEMBER_INCREASE = "group_member_increase"; // 群成员增加
             static constexpr char *GROUP_BAN = "group_ban"; // 群禁言
-            static constexpr char *FRIEND_ADD = "friend_add"; // 好友已添加
+            static constexpr char *FRIEND_ADD = "friend_add"; // 好友添加
         };
 
         struct SubType {
@@ -198,7 +198,7 @@ namespace cq {
         int64_t duration; // 禁言时长(秒)
     };
 
-    // 好友已添加事件
+    // 好友添加事件
     struct FriendAddEvent final : NoticeEvent, UserIdMixin {
         FriendAddEvent() {
             type = Type::NOTICE;

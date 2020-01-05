@@ -33,7 +33,7 @@ __CQ_EVENT(int32_t, Initialize, 4)
 }
 
 /**
- * 生命周期: 插件启用.
+ * 生命周期: 应用启用.
  */
 __CQ_EVENT(int32_t, cq_event_enable, 0)
 () {
@@ -42,7 +42,7 @@ __CQ_EVENT(int32_t, cq_event_enable, 0)
 }
 
 /**
- * 生命周期: 插件停用.
+ * 生命周期: 应用停用.
  */
 __CQ_EVENT(int32_t, cq_event_disable, 0)
 () {
@@ -298,7 +298,7 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 }
 
 /**
- * Type=201 好友事件-好友已添加
+ * Type=201 好友事件-好友添加
  */
 __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {

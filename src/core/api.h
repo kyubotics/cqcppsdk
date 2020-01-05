@@ -107,7 +107,7 @@ namespace cq {
     std::string get_cookies(const std::string &domain = "");
     // 获取 CSRF Token (即 bkn)
     int32_t get_csrf_token();
-    // 获取插件数据目录(结尾包含"\")
+    // 获取应用数据目录(结尾包含"\")
     std::string get_app_directory();
     // 获取酷Q根目录(结尾包含"\")
     std::string get_coolq_root_directory();
