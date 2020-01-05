@@ -13,13 +13,13 @@ message(STATUS "cqcppsdk is in ${_CQCPPSDK_DIR}")
 # 递归搜索 core 和 utils 中的源文件
 file(GLOB_RECURSE _CQCPPSDK_SOURCE_FILES ${_CQCPPSDK_DIR}/src/core/*.cpp ${_CQCPPSDK_DIR}/src/utils/*.cpp)
 
-# 设置 App Id, 必须在 CMakeLists.txt 中调用, 否则无法编译
+# 设置 app id, 必须在 CMakeLists.txt 中调用, 否则无法编译
 function(cq_set_app_id APP_ID)
     message(STATUS "app id: ${APP_ID}")
     add_definitions(-DAPP_ID="${APP_ID}")
 endfunction()
 
-# 添加酷Q应用构建目标, 在调用之前设置 CQCPPSDK_DEV_MODE 为 ON 可构建 Dev 模式的可执行文件
+# 添加酷Q应用构建目标, 在调用之前设置 CQCPPSDK_DEV_MODE 为 ON 可构建 dev 模式的可执行文件
 function(cq_add_app OUT_NAME SOURCE_FILES)
     message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
     if(CQCPPSDK_DEV_MODE)
