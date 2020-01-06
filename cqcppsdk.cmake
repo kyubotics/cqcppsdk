@@ -33,6 +33,10 @@ function(cq_add_app OUT_NAME SOURCE_FILES)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/std_mode/*.cpp)
         add_library(${OUT_NAME} SHARED ${SOURCE_FILES} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
     endif()
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+        # 在 GCC 8.x 环境下使用 std::filesystem 需要链接 stdc++fs
+        target_link_libraries(${OUT_NAME} stdc++fs)
+    endif()
 endfunction()
 
 # 添加安装脚本, 将在指定构建目标构建完成后运行, 可用于拷贝 app.dll 和 app.json 到酷Q应用目录
