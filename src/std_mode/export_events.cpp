@@ -18,7 +18,9 @@ using utils::string_from_coolq;
  * 返回 API 版本和 App Id.
  */
 __CQ_EVENT(const char *, AppInfo, 0)
-() { return "9," APP_ID; }
+() {
+    return "9," APP_ID;
+}
 
 /**
  * 生命周期: 初始化.
@@ -78,26 +80,9 @@ __CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
  */
 __CQ_EVENT(int32_t, cq_event_private_message, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
-    using SubType = PrivateMessageEvent::SubType;
     PrivateMessageEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 11:
-        e.sub_type = SubType::FRIEND;
-        break;
-    case 2:
-        e.sub_type = SubType::GROUP;
-        break;
-    case 3:
-        e.sub_type = SubType::DISCUSS;
-        break;
-    case 1:
-        e.sub_type = SubType::OTHER;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    e.sub_type = static_cast<PrivateMessageEvent::SubType>(sub_type);
     e.target = Target(from_qq);
     e.message_id = msg_id;
     e.message = string_from_coolq(msg);
@@ -115,7 +100,6 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
  int32_t font) {
     GroupMessageEvent e;
     e.time = time(nullptr);
-    e.sub_type = GroupMessageEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_group, Target::GROUP);
     e.message_id = msg_id;
     e.message = string_from_coolq(msg);
@@ -137,7 +121,6 @@ __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
     DiscussMessageEvent e;
     e.time = time(nullptr);
-    e.sub_type = DiscussMessageEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_discuss, Target::DISCUSS);
     e.message_id = msg_id;
     e.message = string_from_coolq(msg);
@@ -159,7 +142,6 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file) {
     GroupUploadEvent e;
     e.time = time(nullptr);
-    e.sub_type = GroupUploadEvent::SubType::DEFAULT;
     e.target = Target(from_qq, from_group, Target::GROUP);
     e.user_id = from_qq;
     e.group_id = from_group;
@@ -177,20 +159,9 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
  */
 __CQ_EVENT(int32_t, cq_event_group_admin, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t being_operate_qq) {
-    using SubType = GroupAdminEvent::SubType;
     GroupAdminEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 1:
-        e.sub_type = SubType::UNSET;
-        break;
-    case 2:
-        e.sub_type = SubType::SET;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    e.sub_type = static_cast<GroupAdminEvent::SubType>(sub_type);
     e.target = Target(being_operate_qq, from_group, Target::GROUP);
     e.user_id = being_operate_qq;
     e.group_id = from_group;
@@ -206,23 +177,10 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
  */
 __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
-    using SubType = GroupMemberDecreaseEvent::SubType;
     GroupMemberDecreaseEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 1:
-        e.sub_type = SubType::LEAVE;
-        break;
-    case 2:
-        e.sub_type = SubType::KICK;
-        break;
-    case 3:
-        e.sub_type = SubType::KICK_ME;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    using SubType = GroupMemberDecreaseEvent::SubType;
+    e.sub_type = static_cast<SubType>(sub_type);
     if (being_operate_qq == get_login_user_id() && e.sub_type == SubType::KICK) {
         e.sub_type = SubType::KICK_ME;
     }
@@ -242,20 +200,9 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
  */
 __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
-    using SubType = GroupMemberIncreaseEvent::SubType;
     GroupMemberIncreaseEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 1:
-        e.sub_type = SubType::APPROVE;
-        break;
-    case 2:
-        e.sub_type = SubType::INVITE;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    e.sub_type = static_cast<GroupMemberIncreaseEvent::SubType>(sub_type);
     e.target = Target(being_operate_qq, from_group, Target::GROUP);
     e.user_id = being_operate_qq;
     e.group_id = from_group;
@@ -274,20 +221,9 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
  */
 __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq, int64_t duration) {
-    using SubType = GroupBanEvent::SubType;
     GroupBanEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 1:
-        e.sub_type = SubType::LIFT_BAN;
-        break;
-    case 2:
-        e.sub_type = SubType::BAN;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    e.sub_type = static_cast<GroupBanEvent::SubType>(sub_type);
     e.target = Target(being_operate_qq, from_group, Target::GROUP);
     e.user_id = being_operate_qq;
     e.group_id = from_group;
@@ -304,7 +240,6 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {
     FriendAddEvent e;
     e.time = time(nullptr);
-    e.sub_type = FriendAddEvent::SubType::DEFAULT;
     e.target = Target(from_qq);
     e.user_id = from_qq;
     call_all(_friend_add_callbacks, e);
@@ -324,7 +259,6 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
     FriendRequestEvent e;
     e.time = time(nullptr);
-    e.sub_type = FriendRequestEvent::SubType::DEFAULT;
     e.target = Target(from_qq);
     e.comment = string_from_coolq(msg);
     e.flag = string_from_coolq(response_flag);
@@ -341,20 +275,9 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
  */
 __CQ_EVENT(int32_t, cq_event_group_request, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *msg, const char *response_flag) {
-    using SubType = GroupRequestEvent::SubType;
     GroupRequestEvent e;
     e.time = time(nullptr);
-    switch (sub_type) {
-    case 1:
-        e.sub_type = SubType::ADD;
-        break;
-    case 2:
-        e.sub_type = SubType::INVITE;
-        break;
-    default:
-        e.sub_type = SubType::UNKNOWN;
-        break;
-    }
+    e.sub_type = static_cast<GroupRequestEvent::SubType>(sub_type);
     e.target = Target(from_qq, from_group, Target::GROUP);
     e.comment = string_from_coolq(msg);
     e.flag = string_from_coolq(response_flag);

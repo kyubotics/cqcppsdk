@@ -7,12 +7,6 @@
 namespace cq {
     struct Event {
         time_t time; // 酷Q触发事件的时间
-        std::string type; // 事件类型
-        std::string detail_type; // 事件详细类型
-        std::string sub_type; // 事件子类型
-
-        // 事件全名
-        std::string name() const { return type + "." + detail_type + "." + sub_type; }
     };
 
     // 保留备用
@@ -20,12 +14,13 @@ namespace cq {
 
     // 用户事件
     struct UserEvent : Event {
-        struct Type {
-            static constexpr char *MESSAGE = "message"; // 消息事件
-            static constexpr char *NOTICE = "notice"; // 通知事件
-            static constexpr char *REQUEST = "request"; // 请求事件
+        enum Type {
+            MESSAGE, // 消息事件
+            NOTICE, // 通知事件
+            REQUEST, // 请求事件
         };
 
+        Type type; // 事件类型
         Target target; // 触发事件的主体, 例如某用户, 或某群的某用户, 可用于发送回复时指定目标
 
         enum Operation {
@@ -34,27 +29,32 @@ namespace cq {
         };
 
         mutable Operation operation = IGNORE;
+
         // 阻止事件传递给下一个应用
-        void block() const { operation = BLOCK; }
+        void block() const {
+            operation = BLOCK;
+        }
+
+        // 事件是否已被阻止传递给下一个应用
+        bool blocked() const {
+            return operation == BLOCK;
+        }
+
+        // 默认事件子类型枚举, 用于酷Q没有明确区分子类型的事件类, 以提供一致的接口
+        enum DefaultSubType {
+            DEFAULT = 1,
+        };
     };
 
     // 消息事件
     struct MessageEvent : UserEvent {
-        struct DetailType {
-            static constexpr char *PRIVATE = "private"; // 私聊消息
-            static constexpr char *GROUP = "group"; // 群消息(包括新式讨论组)
-            static constexpr char *DISCUSS = "discuss"; // 讨论组消息(仅旧式讨论组)
+        enum DetailType {
+            PRIVATE, // 私聊消息
+            GROUP, // 群消息(包括新式讨论组)
+            DISCUSS, // 讨论组消息(仅旧式讨论组)
         };
 
-        struct SubType {
-            static constexpr char *DEFAULT = "default"; // 默认
-            static constexpr char *FRIEND = "friend"; // 好友消息
-            static constexpr char *GROUP = "group"; // 群临时会话
-            static constexpr char *DISCUSS = "discuss"; // 讨论组临时会话
-            static constexpr char *OTHER = "other"; // 陌生人消息
-            static constexpr char *UNKNOWN = "unknown"; // 未知子类型
-        };
-
+        DetailType detail_type; // 事件详细类型
         int32_t message_id; // 消息 Id
         std::string message; // 消息内容
         int32_t font; // 字体, 此属性已经没有实际意义
@@ -62,28 +62,16 @@ namespace cq {
 
     // 通知事件
     struct NoticeEvent : UserEvent {
-        struct DetailType {
-            static constexpr char *GROUP_UPLOAD = "group_upload"; // 群文件上传
-            static constexpr char *GROUP_ADMIN = "group_admin"; // 群管理员变动
-            static constexpr char *GROUP_MEMBER_DECREASE = "group_member_decrease"; // 群成员减少
-            static constexpr char *GROUP_MEMBER_INCREASE = "group_member_increase"; // 群成员增加
-            static constexpr char *GROUP_BAN = "group_ban"; // 群禁言
-            static constexpr char *FRIEND_ADD = "friend_add"; // 好友添加
+        enum DetailType {
+            GROUP_UPLOAD, // 群文件上传
+            GROUP_ADMIN, // 群管理员变动
+            GROUP_MEMBER_DECREASE, // 群成员减少
+            GROUP_MEMBER_INCREASE, // 群成员增加
+            GROUP_BAN, // 群禁言
+            FRIEND_ADD, // 好友添加
         };
 
-        struct SubType {
-            static constexpr char *DEFAULT = "default"; // 默认
-            static constexpr char *UNSET = "unset"; // 取消设置管理员
-            static constexpr char *SET = "set"; // 设置管理员
-            static constexpr char *LEAVE = "leave"; // 群成员退群
-            static constexpr char *KICK = "kick"; // 群成员被踢
-            static constexpr char *KICK_ME = "kick_me"; // 自己(登录号)被踢
-            static constexpr char *APPROVE = "approve"; // 管理员已同意
-            static constexpr char *INVITE = "invite"; // 管理员邀请
-            static constexpr char *LIFT_BAN = "lift_ban"; // 解除禁言
-            static constexpr char *BAN = "ban"; // 禁言
-            static constexpr char *UNKNOWN = "unknown"; // 未知子类型
-        };
+        DetailType detail_type; // 事件详细类型
     };
 
     // 请求事件
@@ -93,18 +81,12 @@ namespace cq {
             REJECT = 2, // 拒绝
         };
 
-        struct DetailType {
-            static constexpr char *FRIEND = "friend"; // 好友请求
-            static constexpr char *GROUP = "group"; // 群请求
+        enum DetailType {
+            FRIEND, // 好友请求
+            GROUP, // 群请求
         };
 
-        struct SubType {
-            static constexpr char *DEFAULT = "default"; // 默认
-            static constexpr char *ADD = "add"; // 他人申请入群
-            static constexpr char *INVITE = "invite"; // 自己(登录号)受邀入群
-            static constexpr char *UNKNOWN = "unknown"; // 未知子类型
-        };
-
+        DetailType detail_type; // 事件详细类型
         std::string comment; // 备注内容
         std::string flag; // 请求标识
     };
@@ -131,6 +113,15 @@ namespace cq {
             type = Type::MESSAGE;
             detail_type = DetailType::PRIVATE;
         }
+
+        enum SubType {
+            FRIEND = 11, // 好友消息
+            GROUP = 2, // 群临时会话
+            DISCUSS = 3, // 讨论组临时会话
+            OTHER = 1, // 陌生人消息
+        };
+
+        SubType sub_type; // 事件子类型
     };
 
     // 群消息事件
@@ -140,10 +131,13 @@ namespace cq {
             detail_type = DetailType::GROUP;
         }
 
+        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
         Anonymous anonymous; // 匿名信息
 
         // 是否匿名消息
-        bool is_anonymous() const { return !anonymous.name.empty(); }
+        bool is_anonymous() const {
+            return !anonymous.name.empty();
+        }
     };
 
     // 讨论组消息事件
@@ -152,6 +146,8 @@ namespace cq {
             type = Type::MESSAGE;
             detail_type = DetailType::DISCUSS;
         }
+
+        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 群文件上传事件
@@ -161,6 +157,7 @@ namespace cq {
             detail_type = DetailType::GROUP_UPLOAD;
         }
 
+        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
         File file; // 文件信息
     };
 
@@ -170,6 +167,13 @@ namespace cq {
             type = Type::NOTICE;
             detail_type = DetailType::GROUP_ADMIN;
         }
+
+        enum SubType {
+            UNSET = 1, // 取消管理员
+            SET = 2, // 设置管理员
+        };
+
+        SubType sub_type; // 事件子类型
     };
 
     // 群成员减少事件
@@ -178,6 +182,14 @@ namespace cq {
             type = Type::NOTICE;
             detail_type = DetailType::GROUP_MEMBER_DECREASE;
         }
+
+        enum SubType {
+            LEAVE = 1, // 群成员退群
+            KICK = 2, // 群成员被踢
+            KICK_ME = 3, // 自己(登录号)被踢
+        };
+
+        SubType sub_type; // 事件子类型
     };
 
     // 群成员增加事件
@@ -186,6 +198,13 @@ namespace cq {
             type = Type::NOTICE;
             detail_type = DetailType::GROUP_MEMBER_INCREASE;
         }
+
+        enum SubType {
+            APPROVE = 1, // 管理员同意
+            INVITE = 2, // 管理员邀请
+        };
+
+        SubType sub_type; // 事件子类型
     };
 
     // 群禁言事件
@@ -195,6 +214,12 @@ namespace cq {
             detail_type = DetailType::GROUP_BAN;
         }
 
+        enum SubType {
+            LIFT_BAN = 1, // 解除禁言
+            BAN = 2, // 禁言
+        };
+
+        SubType sub_type; // 事件子类型
         int64_t duration; // 禁言时长(秒)
     };
 
@@ -204,6 +229,8 @@ namespace cq {
             type = Type::NOTICE;
             detail_type = DetailType::FRIEND_ADD;
         }
+
+        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 好友请求事件
@@ -212,6 +239,8 @@ namespace cq {
             type = Type::REQUEST;
             detail_type = DetailType::FRIEND;
         }
+
+        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 群请求事件
@@ -220,13 +249,22 @@ namespace cq {
             type = Type::REQUEST;
             detail_type = DetailType::GROUP;
         }
+
+        enum SubType {
+            ADD = 1, // 他人申请入群
+            INVITE = 2, // 自己(登录号)受邀入群
+        };
+
+        SubType sub_type; // 事件子类型
     };
 } // namespace cq
 
 namespace cq {
 #define DEF_EVENT(EventName, EventType)                                          \
     extern std::vector<std::function<void(EventType)>> _##EventName##_callbacks; \
-    inline void on_##EventName(std::function<void(EventType)> cb) { _##EventName##_callbacks.push_back(cb); }
+    inline void on_##EventName(std::function<void(EventType)> cb) {              \
+        _##EventName##_callbacks.push_back(cb);                                  \
+    }
 
     /*
     展开为:
@@ -246,3 +284,143 @@ namespace cq {
 
 #undef DEF_EVENT
 } // namespace cq
+
+namespace std {
+    inline string to_string(cq::UserEvent::Type type) {
+        using Type = cq::UserEvent::Type;
+        switch (type) {
+        case Type::MESSAGE:
+            return "message";
+        case Type::NOTICE:
+            return "notice";
+        case Type::REQUEST:
+            return "request";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::MessageEvent::DetailType detail_type) {
+        using DetailType = cq::MessageEvent::DetailType;
+        switch (detail_type) {
+        case DetailType::PRIVATE:
+            return "private";
+        case DetailType::GROUP:
+            return "group";
+        case DetailType::DISCUSS:
+            return "discuss";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::NoticeEvent::DetailType detail_type) {
+        using DetailType = cq::NoticeEvent::DetailType;
+        switch (detail_type) {
+        case DetailType::GROUP_UPLOAD:
+            return "group_upload";
+        case DetailType::GROUP_ADMIN:
+            return "group_admin";
+        case DetailType::GROUP_MEMBER_DECREASE:
+            return "group_member_decrease";
+        case DetailType::GROUP_MEMBER_INCREASE:
+            return "group_member_increase";
+        case DetailType::GROUP_BAN:
+            return "group_ban";
+        case DetailType::FRIEND_ADD:
+            return "friend_add";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::RequestEvent::DetailType detail_type) {
+        using DetailType = cq::RequestEvent::DetailType;
+        switch (detail_type) {
+        case DetailType::FRIEND:
+            return "friend";
+        case DetailType::GROUP:
+            return "group";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::PrivateMessageEvent::SubType sub_type) {
+        using SubType = cq::PrivateMessageEvent::SubType;
+        switch (sub_type) {
+        case SubType::FRIEND:
+            return "friend";
+        case SubType::GROUP:
+            return "group";
+        case SubType::DISCUSS:
+            return "discuss";
+        case SubType::OTHER:
+            return "other";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::GroupAdminEvent::SubType sub_type) {
+        using SubType = cq::GroupAdminEvent::SubType;
+        switch (sub_type) {
+        case SubType::UNSET:
+            return "unset";
+        case SubType::SET:
+            return "set";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::GroupMemberDecreaseEvent::SubType sub_type) {
+        using SubType = cq::GroupMemberDecreaseEvent::SubType;
+        switch (sub_type) {
+        case SubType::LEAVE:
+            return "leave";
+        case SubType::KICK:
+            return "kick";
+        case SubType::KICK_ME:
+            return "kick_me";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::GroupMemberIncreaseEvent::SubType sub_type) {
+        using SubType = cq::GroupMemberIncreaseEvent::SubType;
+        switch (sub_type) {
+        case SubType::APPROVE:
+            return "approve";
+        case SubType::INVITE:
+            return "invite";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::GroupBanEvent::SubType sub_type) {
+        using SubType = cq::GroupBanEvent::SubType;
+        switch (sub_type) {
+        case SubType::LIFT_BAN:
+            return "lift_ban";
+        case SubType::BAN:
+            return "ban";
+        default:
+            return "unknown";
+        }
+    }
+
+    inline string to_string(cq::GroupRequestEvent::SubType sub_type) {
+        using SubType = cq::GroupRequestEvent::SubType;
+        switch (sub_type) {
+        case SubType::ADD:
+            return "add";
+        case SubType::INVITE:
+            return "invite";
+        default:
+            return "unknown";
+        }
+    }
+} // namespace std
