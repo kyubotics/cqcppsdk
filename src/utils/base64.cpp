@@ -7,5 +7,7 @@ namespace cq::utils {
         return ::base64_encode(bytes, len);
     }
 
-    std::string base64_decode(const std::string &str) { return ::base64_decode(str); }
+    std::string base64_decode(const std::string &str) {
+        return ::base64_decode(str);
+    }
 } // namespace cq::utils

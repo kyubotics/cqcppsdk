@@ -9,9 +9,10 @@
 namespace cq {
     // API 调用失败
     struct ApiError : RuntimeError {
-        ApiError(const int code) : RuntimeError("failed to call coolq api") { this->code = code; }
+        ApiError(const int code) : RuntimeError("failed to call coolq api"), code(code) {
+        }
 
-        int code; // 错误码
+        const int code; // 错误码
 
         static const auto INVALID_DATA = 100; // 酷Q返回的数据无效
         static const auto INVALID_TARGET = 101; // 发送目标无效
@@ -100,8 +101,11 @@ namespace cq {
     std::vector<GroupMember> get_group_member_list(const int64_t group_id);
     // 获取群成员信息
     GroupMember get_group_member_info(const int64_t group_id, const int64_t user_id, const bool no_cache = false);
+
     // 获取登录号信息
-    inline User get_login_info() { return get_stranger_info(get_login_user_id()); }
+    inline User get_login_info() {
+        return get_stranger_info(get_login_user_id());
+    }
 
     // 获取 cookies
     std::string get_cookies(const std::string &domain = "");

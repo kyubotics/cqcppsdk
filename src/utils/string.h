@@ -19,11 +19,21 @@ namespace cq::utils {
         return string_convert_encoding(b, encoding, "utf-8", capability_factor);
     }
 
-    inline std::string string_to_coolq(const std::string &str) { return string_encode(str, "gb18030"); }
-    inline std::string string_from_coolq(const std::string &str) { return string_decode(str, "gb18030"); }
+    inline std::string string_to_coolq(const std::string &str) {
+        return string_encode(str, "gb18030");
+    }
+
+    inline std::string string_from_coolq(const std::string &str) {
+        return string_decode(str, "gb18030");
+    }
 } // namespace cq::utils
 
 namespace std {
-    inline string to_string(const string &val) { return val; }
-    inline string to_string(const bool val) { return val ? "true" : "false"; }
+    inline string to_string(const string &val) {
+        return val;
+    }
+
+    inline string to_string(const bool val) {
+        return val ? "true" : "false";
+    }
 } // namespace std

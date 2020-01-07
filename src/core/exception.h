@@ -6,11 +6,16 @@
 namespace cq {
     // cq 命名空间下所有异常类型的基类
     struct Exception : std::exception {
-        Exception(const char *what_arg) : Exception(std::string(what_arg)) {}
-        Exception(const std::string &what_arg) : what_arg_(what_arg) {}
+        Exception(const char *what_arg) : Exception(std::string(what_arg)) {
+        }
+
+        Exception(const std::string &what_arg) : what_arg_(what_arg) {
+        }
 
         // 异常描述
-        const char *what() const noexcept override { return what_arg_.c_str(); }
+        const char *what() const noexcept override {
+            return what_arg_.c_str();
+        }
 
     protected:
         std::string what_arg_;

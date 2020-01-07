@@ -8,18 +8,27 @@ namespace cq {
     struct BytesNotEnough : LogicError {
         BytesNotEnough(const size_t have, const size_t needed)
             : LogicError("there aren't enough bytes remained (have " + std::to_string(have) + ", but "
-                         + std::to_string(needed) + " are/is needed)") {}
+                         + std::to_string(needed) + " are/is needed)") {
+        }
     };
 } // namespace cq
 
 namespace cq::utils {
     class BinPack {
     public:
-        BinPack() : bytes_(""), curr_(0) {}
-        explicit BinPack(const std::string &b) : bytes_(b), curr_(0) {}
+        BinPack() : bytes_(""), curr_(0) {
+        }
 
-        size_t size() const noexcept { return bytes_.size() - curr_; }
-        bool empty() const noexcept { return size() == 0; }
+        explicit BinPack(const std::string &b) : bytes_(b), curr_(0) {
+        }
+
+        size_t size() const noexcept {
+            return bytes_.size() - curr_;
+        }
+
+        bool empty() const noexcept {
+            return size() == 0;
+        }
 
         template <typename IntType>
         IntType pop_int() noexcept(false) {
@@ -52,9 +61,13 @@ namespace cq::utils {
             return result;
         }
 
-        std::string pop_token() noexcept(false) { return pop_bytes(pop_int<int16_t>()); }
+        std::string pop_token() noexcept(false) {
+            return pop_bytes(pop_int<int16_t>());
+        }
 
-        bool pop_bool() noexcept(false) { return static_cast<bool>(pop_int<int32_t>()); }
+        bool pop_bool() noexcept(false) {
+            return static_cast<bool>(pop_int<int32_t>());
+        }
 
     private:
         std::string bytes_;

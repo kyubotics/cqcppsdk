@@ -17,7 +17,9 @@ namespace cq::dir {
         return true;
     }
 
-    string root() { return get_coolq_root_directory(); }
+    string root() {
+        return get_coolq_root_directory();
+    }
 
     string app(const std::string &sub_dir_name) {
         if (sub_dir_name.empty()) {

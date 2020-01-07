@@ -14,7 +14,8 @@ using namespace std;
 namespace fs = filesystem;
 
 namespace cq {
-    void __init_api() {}
+    void __init_api() {
+    }
 
 #pragma region Message
 

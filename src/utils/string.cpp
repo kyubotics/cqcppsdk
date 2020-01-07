@@ -10,8 +10,13 @@
 using namespace std;
 
 namespace cq::utils {
-    string ws2s(const wstring &ws) { return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().to_bytes(ws); }
-    wstring s2ws(const string &s) { return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().from_bytes(s); }
+    string ws2s(const wstring &ws) {
+        return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().to_bytes(ws);
+    }
+
+    wstring s2ws(const string &s) {
+        return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().from_bytes(s);
+    }
 
     std::string string_convert_encoding(const std::string &text, const std::string &from_enc, const std::string &to_enc,
                                         float capability_factor) {

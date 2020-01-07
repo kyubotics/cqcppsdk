@@ -32,10 +32,18 @@ namespace cq {
         }
 
         // 用户
-        static Target user(const int64_t user_id) { return Target(user_id, USER); }
+        static Target user(const int64_t user_id) {
+            return Target(user_id, USER);
+        }
+
         // 群
-        static Target group(const int64_t group_id) { return Target(group_id, GROUP); }
+        static Target group(const int64_t group_id) {
+            return Target(group_id, GROUP);
+        }
+
         // 讨论组
-        static Target discuss(const int64_t discuss_id) { return Target(discuss_id, DISCUSS); }
+        static Target discuss(const int64_t discuss_id) {
+            return Target(discuss_id, DISCUSS);
+        }
     };
 } // namespace cq

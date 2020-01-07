@@ -69,13 +69,17 @@ namespace cq {
         return static_cast<int64_t>(chk(raw::CQ_sendDiscussMsg(__ac, discuss_id, string_to_coolq(message).c_str())));
     }
 
-    void delete_message(const int64_t message_id) { chk(raw::CQ_deleteMsg(__ac, message_id)); }
+    void delete_message(const int64_t message_id) {
+        chk(raw::CQ_deleteMsg(__ac, message_id));
+    }
 
 #pragma endregion
 
 #pragma region Friend Operation
 
-    void send_like(const int64_t user_id, const int32_t times) { chk(raw::CQ_sendLikeV2(__ac, user_id, times)); }
+    void send_like(const int64_t user_id, const int32_t times) {
+        chk(raw::CQ_sendLikeV2(__ac, user_id, times));
+    }
 
 #pragma endregion
 
@@ -118,7 +122,9 @@ namespace cq {
         chk(raw::CQ_setGroupSpecialTitle(__ac, group_id, user_id, string_to_coolq(special_title).c_str(), duration));
     }
 
-    void set_discuss_leave(const int64_t discuss_id) { chk(raw::CQ_setDiscussLeave(__ac, discuss_id)); }
+    void set_discuss_leave(const int64_t discuss_id) {
+        chk(raw::CQ_setDiscussLeave(__ac, discuss_id));
+    }
 
 #pragma endregion
 
@@ -130,19 +136,12 @@ namespace cq {
             __ac, string_to_coolq(flag).c_str(), static_cast<int32_t>(operation), string_to_coolq(remark).c_str()));
     }
 
-    void set_group_request(const std::string &flag, const std::string &sub_type,
+    void set_group_request(const std::string &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason) {
         int32_t sub_type_i = 0;
-        if (sub_type == GroupRequestEvent::SubType::ADD) {
-            sub_type_i = 1;
-        } else if (sub_type == GroupRequestEvent::SubType::INVITE) {
-            sub_type_i = 2;
-        } else {
-            throw ApiError(ApiError::INVALID_ARGS);
-        }
         chk(raw::CQ_setGroupAddRequestV2(__ac,
                                          string_to_coolq(flag).c_str(),
-                                         sub_type_i,
+                                         static_cast<int32_t>(sub_type),
                                          static_cast<int32_t>(operation),
                                          string_to_coolq(reason).c_str()));
     }
@@ -151,9 +150,13 @@ namespace cq {
 
 #pragma region QQ Information
 
-    int64_t get_login_user_id() { return chk(raw::CQ_getLoginQQ(__ac)); }
+    int64_t get_login_user_id() {
+        return chk(raw::CQ_getLoginQQ(__ac));
+    }
 
-    std::string get_login_nickname() { return string_from_coolq(chk(raw::CQ_getLoginNick(__ac))); }
+    std::string get_login_nickname() {
+        return string_from_coolq(chk(raw::CQ_getLoginNick(__ac)));
+    }
 
     User get_stranger_info(const int64_t user_id, const bool no_cache) {
         const auto b64 = string_from_coolq(chk(raw::CQ_getStrangerInfo(__ac, user_id, no_cache)));
@@ -217,9 +220,13 @@ namespace cq {
         return string_from_coolq(chk(raw::CQ_getCookiesV2(__ac, string_to_coolq(domain).c_str())));
     }
 
-    int32_t get_csrf_token() { return chk(raw::CQ_getCsrfToken(__ac)); }
+    int32_t get_csrf_token() {
+        return chk(raw::CQ_getCsrfToken(__ac));
+    }
 
-    std::string get_app_directory() { return string_from_coolq(chk(raw::CQ_getAppDirectory(__ac))); }
+    std::string get_app_directory() {
+        return string_from_coolq(chk(raw::CQ_getAppDirectory(__ac)));
+    }
 
     std::string get_coolq_root_directory() {
         constexpr size_t size = 1024;
@@ -239,9 +246,13 @@ namespace cq {
                       : raw::CQ_getRecord(__ac, string_to_coolq(file).c_str(), string_to_coolq(out_format).c_str())));
     }
 
-    bool can_send_image() { return raw::CQ_canSendImage(__ac); }
+    bool can_send_image() {
+        return raw::CQ_canSendImage(__ac);
+    }
 
-    bool can_send_record() { return raw::CQ_canSendRecord(__ac); }
+    bool can_send_record() {
+        return raw::CQ_canSendRecord(__ac);
+    }
 
     void add_log(int32_t level, const std::string &tag, const std::string &message) {
         chk(raw::CQ_addLog(__ac, level, string_to_coolq(tag).c_str(), string_to_coolq(message).c_str()));

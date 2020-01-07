@@ -18,7 +18,9 @@ using namespace cq;
 using cq::utils::call_all;
 using cq::utils::ws2s;
 
-static void prompt() { cout << endl << ">>> "; }
+static void prompt() {
+    cout << endl << ">>> ";
+}
 
 static void process(string msg) {
     static int message_id = 0;
@@ -34,7 +36,9 @@ static void process(string msg) {
     call_all(_private_message_callbacks, e);
 }
 
-static void sig_handler(int signum) { call_all(cq::_coolq_exit_callbacks); }
+static void sig_handler(int signum) {
+    call_all(cq::_coolq_exit_callbacks);
+}
 
 int main() {
     cq::__init();
