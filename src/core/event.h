@@ -41,7 +41,7 @@ namespace cq {
         }
 
         // 默认事件子类型枚举, 用于酷Q没有明确区分子类型的事件类, 以提供一致的接口
-        enum DefaultSubType {
+        enum SubType {
             DEFAULT = 1,
         };
     };
@@ -131,7 +131,7 @@ namespace cq {
             detail_type = DetailType::GROUP;
         }
 
-        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
+        SubType sub_type = DEFAULT; // 默认事件子类型
         Anonymous anonymous; // 匿名信息
 
         // 是否匿名消息
@@ -147,7 +147,7 @@ namespace cq {
             detail_type = DetailType::DISCUSS;
         }
 
-        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
+        SubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 群文件上传事件
@@ -157,7 +157,7 @@ namespace cq {
             detail_type = DetailType::GROUP_UPLOAD;
         }
 
-        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
+        SubType sub_type = DEFAULT; // 默认事件子类型
         File file; // 文件信息
     };
 
@@ -230,7 +230,7 @@ namespace cq {
             detail_type = DetailType::FRIEND_ADD;
         }
 
-        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
+        SubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 好友请求事件
@@ -240,7 +240,7 @@ namespace cq {
             detail_type = DetailType::FRIEND;
         }
 
-        DefaultSubType sub_type = DEFAULT; // 默认事件子类型
+        SubType sub_type = DEFAULT; // 默认事件子类型
     };
 
     // 群请求事件
@@ -344,6 +344,10 @@ namespace std {
         default:
             return "unknown";
         }
+    }
+
+    inline string to_string(cq::UserEvent::SubType sub_type) {
+        return "default";
     }
 
     inline string to_string(cq::PrivateMessageEvent::SubType sub_type) {
