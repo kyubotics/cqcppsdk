@@ -7,10 +7,18 @@
 namespace cq {
     struct Event {
         time_t time; // 酷Q触发事件的时间
+
+        Event() : time(std::time(nullptr)) {
+        }
+
+        virtual ~Event() = default;
     };
 
     // 保留备用
-    struct SysEvent : Event {};
+    struct SysEvent : Event {
+        using Event::Event;
+        virtual ~SysEvent() = default;
+    };
 
     // 用户事件
     struct UserEvent : Event {
@@ -44,6 +52,11 @@ namespace cq {
         enum SubType {
             DEFAULT = 1,
         };
+
+        UserEvent(const Type type, const Target target) : type(type), target(target) {
+        }
+
+        virtual ~UserEvent() = default;
     };
 
     // 消息事件
@@ -58,6 +71,17 @@ namespace cq {
         int32_t message_id; // 消息 Id
         std::string message; // 消息内容
         int32_t font; // 字体, 此属性已经没有实际意义
+
+        MessageEvent(const Target target, const DetailType detail_type, const int32_t message_id,
+                     const std::string message, const int32_t font)
+            : UserEvent(MESSAGE, target),
+              detail_type(detail_type),
+              message_id(message_id),
+              message(std::move(message)),
+              font(font) {
+        }
+
+        virtual ~MessageEvent() = default;
     };
 
     // 通知事件
@@ -72,6 +96,12 @@ namespace cq {
         };
 
         DetailType detail_type; // 事件详细类型
+
+        NoticeEvent(const Target target, const DetailType detail_type)
+            : UserEvent(NOTICE, target), detail_type(detail_type) {
+        }
+
+        virtual ~NoticeEvent() = default;
     };
 
     // 请求事件
@@ -89,6 +119,13 @@ namespace cq {
         DetailType detail_type; // 事件详细类型
         std::string comment; // 备注内容
         std::string flag; // 请求标识
+
+        RequestEvent(const Target target, const DetailType detail_type, const std::string comment,
+                     const std::string flag)
+            : UserEvent(REQUEST, target), detail_type(detail_type), comment(std::move(comment)), flag(std::move(flag)) {
+        }
+
+        virtual ~RequestEvent() = default;
     };
 
     struct UserIdMixin {
@@ -109,11 +146,6 @@ namespace cq {
 
     // 私聊消息事件
     struct PrivateMessageEvent final : MessageEvent, UserIdMixin {
-        PrivateMessageEvent() {
-            type = Type::MESSAGE;
-            detail_type = DetailType::PRIVATE;
-        }
-
         enum SubType {
             FRIEND = 11, // 好友消息
             GROUP = 2, // 群临时会话
@@ -122,15 +154,17 @@ namespace cq {
         };
 
         SubType sub_type; // 事件子类型
+
+        PrivateMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+                            const int64_t user_id, const SubType sub_type)
+            : MessageEvent(Target(user_id), PRIVATE, message_id, std::move(message), font),
+              UserIdMixin{user_id},
+              sub_type(sub_type) {
+        }
     };
 
     // 群消息事件
     struct GroupMessageEvent final : MessageEvent, UserIdMixin, GroupIdMixin {
-        GroupMessageEvent() {
-            type = Type::MESSAGE;
-            detail_type = DetailType::GROUP;
-        }
-
         SubType sub_type = DEFAULT; // 默认事件子类型
         Anonymous anonymous; // 匿名信息
 
@@ -138,51 +172,60 @@ namespace cq {
         bool is_anonymous() const {
             return !anonymous.name.empty();
         }
+
+        GroupMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+                          const int64_t user_id, const int64_t group_id, const Anonymous anonymous)
+            : MessageEvent(Target(user_id, group_id, Target::GROUP), GROUP, message_id, std::move(message), font),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              anonymous(std::move(anonymous)) {
+        }
     };
 
     // 讨论组消息事件
     struct DiscussMessageEvent final : MessageEvent, UserIdMixin, DiscussIdMixin {
-        DiscussMessageEvent() {
-            type = Type::MESSAGE;
-            detail_type = DetailType::DISCUSS;
-        }
-
         SubType sub_type = DEFAULT; // 默认事件子类型
+
+        DiscussMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+                            const int64_t user_id, const int64_t discuss_id)
+            : MessageEvent(Target(user_id, discuss_id, Target::DISCUSS), DISCUSS, message_id, std::move(message), font),
+              UserIdMixin{user_id},
+              DiscussIdMixin{discuss_id} {
+        }
     };
 
     // 群文件上传事件
     struct GroupUploadEvent final : NoticeEvent, UserIdMixin, GroupIdMixin {
-        GroupUploadEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::GROUP_UPLOAD;
-        }
-
         SubType sub_type = DEFAULT; // 默认事件子类型
         File file; // 文件信息
+
+        GroupUploadEvent(const int64_t user_id, const int64_t group_id, const File file)
+            : NoticeEvent(Target(user_id, group_id, Target::GROUP), GROUP_UPLOAD),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              file(std::move(file)) {
+        }
     };
 
     // 群管理员变动事件
     struct GroupAdminEvent final : NoticeEvent, UserIdMixin, GroupIdMixin {
-        GroupAdminEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::GROUP_ADMIN;
-        }
-
         enum SubType {
             UNSET = 1, // 取消管理员
             SET = 2, // 设置管理员
         };
 
         SubType sub_type; // 事件子类型
+
+        GroupAdminEvent(const int64_t user_id, const int64_t group_id, const SubType sub_type)
+            : NoticeEvent(Target(user_id, group_id, Target::GROUP), GROUP_ADMIN),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              sub_type(sub_type) {
+        }
     };
 
     // 群成员减少事件
     struct GroupMemberDecreaseEvent final : NoticeEvent, UserIdMixin, GroupIdMixin, OperatorIdMixin {
-        GroupMemberDecreaseEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::GROUP_MEMBER_DECREASE;
-        }
-
         enum SubType {
             LEAVE = 1, // 群成员退群
             KICK = 2, // 群成员被踢
@@ -190,30 +233,38 @@ namespace cq {
         };
 
         SubType sub_type; // 事件子类型
+
+        GroupMemberDecreaseEvent(const int64_t user_id, const int64_t group_id, const int64_t operator_id,
+                                 const SubType sub_type)
+            : NoticeEvent(Target(user_id, group_id, Target::GROUP), GROUP_MEMBER_DECREASE),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              OperatorIdMixin{operator_id},
+              sub_type(sub_type) {
+        }
     };
 
     // 群成员增加事件
     struct GroupMemberIncreaseEvent final : NoticeEvent, UserIdMixin, GroupIdMixin, OperatorIdMixin {
-        GroupMemberIncreaseEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::GROUP_MEMBER_INCREASE;
-        }
-
         enum SubType {
             APPROVE = 1, // 管理员同意
             INVITE = 2, // 管理员邀请
         };
 
         SubType sub_type; // 事件子类型
+
+        GroupMemberIncreaseEvent(const int64_t user_id, const int64_t group_id, const int64_t operator_id,
+                                 const SubType sub_type)
+            : NoticeEvent(Target(user_id, group_id, Target::GROUP), GROUP_MEMBER_INCREASE),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              OperatorIdMixin{operator_id},
+              sub_type(sub_type) {
+        }
     };
 
     // 群禁言事件
     struct GroupBanEvent final : NoticeEvent, UserIdMixin, GroupIdMixin, OperatorIdMixin {
-        GroupBanEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::GROUP_BAN;
-        }
-
         enum SubType {
             LIFT_BAN = 1, // 解除禁言
             BAN = 2, // 禁言
@@ -221,41 +272,51 @@ namespace cq {
 
         SubType sub_type; // 事件子类型
         int64_t duration; // 禁言时长(秒)
+
+        GroupBanEvent(const int64_t user_id, const int64_t group_id, const int64_t operator_id, const SubType sub_type,
+                      const int64_t duration)
+            : NoticeEvent(Target(user_id, group_id, Target::GROUP), GROUP_BAN),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              OperatorIdMixin{operator_id},
+              sub_type(sub_type),
+              duration(duration) {
+        }
     };
 
     // 好友添加事件
     struct FriendAddEvent final : NoticeEvent, UserIdMixin {
-        FriendAddEvent() {
-            type = Type::NOTICE;
-            detail_type = DetailType::FRIEND_ADD;
-        }
-
         SubType sub_type = DEFAULT; // 默认事件子类型
+
+        FriendAddEvent(const int64_t user_id) : NoticeEvent(Target(user_id), FRIEND_ADD), UserIdMixin{user_id} {
+        }
     };
 
     // 好友请求事件
     struct FriendRequestEvent final : RequestEvent, UserIdMixin {
-        FriendRequestEvent() {
-            type = Type::REQUEST;
-            detail_type = DetailType::FRIEND;
-        }
-
         SubType sub_type = DEFAULT; // 默认事件子类型
+
+        FriendRequestEvent(const std::string comment, const std::string flag, const int64_t user_id)
+            : RequestEvent(Target(user_id), FRIEND, std::move(comment), std::move(flag)), UserIdMixin{user_id} {
+        }
     };
 
     // 群请求事件
     struct GroupRequestEvent final : RequestEvent, UserIdMixin, GroupIdMixin {
-        GroupRequestEvent() {
-            type = Type::REQUEST;
-            detail_type = DetailType::GROUP;
-        }
-
         enum SubType {
             ADD = 1, // 他人申请入群
             INVITE = 2, // 自己(登录号)受邀入群
         };
 
         SubType sub_type; // 事件子类型
+
+        GroupRequestEvent(const std::string comment, const std::string flag, const int64_t user_id,
+                          const int64_t group_id, const SubType sub_type)
+            : RequestEvent(Target(user_id, group_id, Target::GROUP), GROUP, std::move(comment), std::move(flag)),
+              UserIdMixin{user_id},
+              GroupIdMixin{group_id},
+              sub_type(sub_type) {
+        }
     };
 } // namespace cq
 

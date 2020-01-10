@@ -80,14 +80,8 @@ __CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
  */
 __CQ_EVENT(int32_t, cq_event_private_message, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
-    PrivateMessageEvent e;
-    e.time = time(nullptr);
-    e.sub_type = static_cast<PrivateMessageEvent::SubType>(sub_type);
-    e.target = Target(from_qq);
-    e.message_id = msg_id;
-    e.message = string_from_coolq(msg);
-    e.font = font;
-    e.user_id = from_qq;
+    auto e = PrivateMessageEvent(
+        msg_id, string_from_coolq(msg), font, from_qq, static_cast<PrivateMessageEvent::SubType>(sub_type));
     call_all(_private_message_callbacks, e);
     return e.operation;
 }
@@ -98,18 +92,12 @@ __CQ_EVENT(int32_t, cq_event_private_message, 24)
 __CQ_EVENT(int32_t, cq_event_group_message, 36)
 (int32_t sub_type, int32_t msg_id, int64_t from_group, int64_t from_qq, const char *from_anonymous, const char *msg,
  int32_t font) {
-    GroupMessageEvent e;
-    e.time = time(nullptr);
-    e.target = Target(from_qq, from_group, Target::GROUP);
-    e.message_id = msg_id;
-    e.message = string_from_coolq(msg);
-    e.font = font;
-    e.user_id = from_qq;
-    e.group_id = from_group;
+    Anonymous anonymous;
     try {
-        e.anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous));
+        anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous));
     } catch (ParseError &) {
     }
+    auto e = GroupMessageEvent(msg_id, string_from_coolq(msg), font, from_qq, from_group, anonymous);
     call_all(_group_message_callbacks, e);
     return e.operation;
 }
@@ -119,14 +107,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
  */
 __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
-    DiscussMessageEvent e;
-    e.time = time(nullptr);
-    e.target = Target(from_qq, from_discuss, Target::DISCUSS);
-    e.message_id = msg_id;
-    e.message = string_from_coolq(msg);
-    e.font = font;
-    e.user_id = from_qq;
-    e.discuss_id = from_discuss;
+    auto e = DiscussMessageEvent(msg_id, string_from_coolq(msg), font, from_qq, from_discuss);
     call_all(_discuss_message_callbacks, e);
     return e.operation;
 }
@@ -140,15 +121,12 @@ __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
  */
 __CQ_EVENT(int32_t, cq_event_group_upload, 28)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file) {
-    GroupUploadEvent e;
-    e.time = time(nullptr);
-    e.target = Target(from_qq, from_group, Target::GROUP);
-    e.user_id = from_qq;
-    e.group_id = from_group;
+    File f;
     try {
-        e.file = ObjectHelper::from_base64<File>(string_from_coolq(file));
+        f = ObjectHelper::from_base64<File>(string_from_coolq(file));
     } catch (ParseError &) {
     }
+    auto e = GroupUploadEvent(from_qq, from_group, f);
     call_all(_group_upload_callbacks, e);
     return e.operation;
 }
@@ -159,12 +137,7 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
  */
 __CQ_EVENT(int32_t, cq_event_group_admin, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t being_operate_qq) {
-    GroupAdminEvent e;
-    e.time = time(nullptr);
-    e.sub_type = static_cast<GroupAdminEvent::SubType>(sub_type);
-    e.target = Target(being_operate_qq, from_group, Target::GROUP);
-    e.user_id = being_operate_qq;
-    e.group_id = from_group;
+    auto e = GroupAdminEvent(being_operate_qq, from_group, static_cast<GroupAdminEvent::SubType>(sub_type));
     call_all(_group_admin_callbacks, e);
     return e.operation;
 }
@@ -177,17 +150,14 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
  */
 __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
-    GroupMemberDecreaseEvent e;
-    e.time = time(nullptr);
     using SubType = GroupMemberDecreaseEvent::SubType;
-    e.sub_type = static_cast<SubType>(sub_type);
+    auto e = GroupMemberDecreaseEvent(being_operate_qq,
+                                      from_group,
+                                      sub_type == SubType::LEAVE ? being_operate_qq : from_qq,
+                                      static_cast<SubType>(sub_type));
     if (being_operate_qq == get_login_user_id() && e.sub_type == SubType::KICK) {
         e.sub_type = SubType::KICK_ME;
     }
-    e.target = Target(being_operate_qq, from_group, Target::GROUP);
-    e.user_id = being_operate_qq;
-    e.group_id = from_group;
-    e.operator_id = e.sub_type == SubType::LEAVE ? being_operate_qq : from_qq;
     call_all(_group_member_decrease_callbacks, e);
     return e.operation;
 }
@@ -200,13 +170,8 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
  */
 __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
-    GroupMemberIncreaseEvent e;
-    e.time = time(nullptr);
-    e.sub_type = static_cast<GroupMemberIncreaseEvent::SubType>(sub_type);
-    e.target = Target(being_operate_qq, from_group, Target::GROUP);
-    e.user_id = being_operate_qq;
-    e.group_id = from_group;
-    e.operator_id = from_qq;
+    auto e = GroupMemberIncreaseEvent(
+        being_operate_qq, from_group, from_qq, static_cast<GroupMemberIncreaseEvent::SubType>(sub_type));
     call_all(_group_member_increase_callbacks, e);
     return e.operation;
 }
@@ -221,14 +186,8 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
  */
 __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq, int64_t duration) {
-    GroupBanEvent e;
-    e.time = time(nullptr);
-    e.sub_type = static_cast<GroupBanEvent::SubType>(sub_type);
-    e.target = Target(being_operate_qq, from_group, Target::GROUP);
-    e.user_id = being_operate_qq;
-    e.group_id = from_group;
-    e.operator_id = from_qq;
-    e.duration = duration;
+    auto e =
+        GroupBanEvent(being_operate_qq, from_group, from_qq, static_cast<GroupBanEvent::SubType>(sub_type), duration);
     call_all(_group_ban_callbacks, e);
     return e.operation;
 }
@@ -238,10 +197,7 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
  */
 __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {
-    FriendAddEvent e;
-    e.time = time(nullptr);
-    e.target = Target(from_qq);
-    e.user_id = from_qq;
+    auto e = FriendAddEvent(from_qq);
     call_all(_friend_add_callbacks, e);
     return e.operation;
 }
@@ -257,12 +213,7 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
  */
 __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
-    FriendRequestEvent e;
-    e.time = time(nullptr);
-    e.target = Target(from_qq);
-    e.comment = string_from_coolq(msg);
-    e.flag = string_from_coolq(response_flag);
-    e.user_id = from_qq;
+    auto e = FriendRequestEvent(string_from_coolq(msg), string_from_coolq(response_flag), from_qq);
     call_all(_friend_request_callbacks, e);
     return e.operation;
 }
@@ -275,14 +226,11 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
  */
 __CQ_EVENT(int32_t, cq_event_group_request, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *msg, const char *response_flag) {
-    GroupRequestEvent e;
-    e.time = time(nullptr);
-    e.sub_type = static_cast<GroupRequestEvent::SubType>(sub_type);
-    e.target = Target(from_qq, from_group, Target::GROUP);
-    e.comment = string_from_coolq(msg);
-    e.flag = string_from_coolq(response_flag);
-    e.user_id = from_qq;
-    e.group_id = from_group;
+    auto e = GroupRequestEvent(string_from_coolq(msg),
+                               string_from_coolq(response_flag),
+                               from_qq,
+                               from_group,
+                               static_cast<GroupRequestEvent::SubType>(sub_type));
     call_all(_group_request_callbacks, e);
     return e.operation;
 }
