@@ -1,8 +1,8 @@
 #include "../core/common.h"
 
 #include "../core/api.h"
-#include "../core/cq_event_def.h"
 #include "../core/event.h"
+#include "../core/export_event_def.h"
 #include "../core/init.h"
 #include "../utils/function.h"
 #include "../utils/string.h"
@@ -80,8 +80,11 @@ __CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
  */
 __CQ_EVENT(int32_t, cq_event_private_message, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
-    auto e = PrivateMessageEvent(
-        msg_id, string_from_coolq(msg), font, from_qq, static_cast<PrivateMessageEvent::SubType>(sub_type));
+    auto e = PrivateMessageEvent(static_cast<int64_t>(msg_id),
+                                 string_from_coolq(msg),
+                                 font,
+                                 from_qq,
+                                 static_cast<PrivateMessageEvent::SubType>(sub_type));
     call_all(_private_message_callbacks, e);
     return e.operation;
 }
@@ -97,7 +100,8 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
         anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous));
     } catch (ParseError &) {
     }
-    auto e = GroupMessageEvent(msg_id, string_from_coolq(msg), font, from_qq, from_group, anonymous);
+    auto e =
+        GroupMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_group, anonymous);
     call_all(_group_message_callbacks, e);
     return e.operation;
 }
@@ -107,7 +111,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
  */
 __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
-    auto e = DiscussMessageEvent(msg_id, string_from_coolq(msg), font, from_qq, from_discuss);
+    auto e = DiscussMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_discuss);
     call_all(_discuss_message_callbacks, e);
     return e.operation;
 }

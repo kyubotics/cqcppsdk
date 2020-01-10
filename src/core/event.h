@@ -68,11 +68,11 @@ namespace cq {
         };
 
         DetailType detail_type; // 事件详细类型
-        int32_t message_id; // 消息 Id
+        int64_t message_id; // 消息 Id
         std::string message; // 消息内容
         int32_t font; // 字体, 此属性已经没有实际意义
 
-        MessageEvent(const Target target, const DetailType detail_type, const int32_t message_id,
+        MessageEvent(const Target target, const DetailType detail_type, const int64_t message_id,
                      const std::string message, const int32_t font)
             : UserEvent(MESSAGE, target),
               detail_type(detail_type),
@@ -155,7 +155,7 @@ namespace cq {
 
         SubType sub_type; // 事件子类型
 
-        PrivateMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+        PrivateMessageEvent(const int64_t message_id, const std::string message, const int32_t font,
                             const int64_t user_id, const SubType sub_type)
             : MessageEvent(Target(user_id), PRIVATE, message_id, std::move(message), font),
               UserIdMixin{user_id},
@@ -173,7 +173,7 @@ namespace cq {
             return !anonymous.name.empty();
         }
 
-        GroupMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+        GroupMessageEvent(const int64_t message_id, const std::string message, const int32_t font,
                           const int64_t user_id, const int64_t group_id, const Anonymous anonymous)
             : MessageEvent(Target(user_id, group_id, Target::GROUP), GROUP, message_id, std::move(message), font),
               UserIdMixin{user_id},
@@ -186,7 +186,7 @@ namespace cq {
     struct DiscussMessageEvent final : MessageEvent, UserIdMixin, DiscussIdMixin {
         SubType sub_type = DEFAULT; // 默认事件子类型
 
-        DiscussMessageEvent(const int32_t message_id, const std::string message, const int32_t font,
+        DiscussMessageEvent(const int64_t message_id, const std::string message, const int32_t font,
                             const int64_t user_id, const int64_t discuss_id)
             : MessageEvent(Target(user_id, discuss_id, Target::DISCUSS), DISCUSS, message_id, std::move(message), font),
               UserIdMixin{user_id},
