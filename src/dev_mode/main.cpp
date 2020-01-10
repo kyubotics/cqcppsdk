@@ -28,6 +28,7 @@ static void process(const string &msg) {
 
     auto e = PrivateMessageEvent(++message_id, msg, 0, FAKE_OTHER_USER_ID, PrivateMessageEvent::SubType::FRIEND);
     call_all(_private_message_callbacks, e);
+    call_all(_message_callbacks, e);
 }
 
 static void sig_handler(int signum) {
