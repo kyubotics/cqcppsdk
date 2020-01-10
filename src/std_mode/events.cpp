@@ -87,6 +87,7 @@ __CQ_EVENT(int32_t, cq_event_private_message, 24)
                                  from_qq,
                                  static_cast<PrivateMessageEvent::SubType>(sub_type));
     call_all(_private_message_callbacks, e);
+    call_all(_message_callbacks, e);
     return e.operation;
 }
 
@@ -104,6 +105,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
     auto e =
         GroupMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_group, anonymous);
     call_all(_group_message_callbacks, e);
+    call_all(_message_callbacks, e);
     return e.operation;
 }
 
@@ -114,6 +116,7 @@ __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
     auto e = DiscussMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_discuss);
     call_all(_discuss_message_callbacks, e);
+    call_all(_message_callbacks, e);
     return e.operation;
 }
 
@@ -133,6 +136,7 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
     }
     auto e = GroupUploadEvent(from_qq, from_group, f);
     call_all(_group_upload_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -144,6 +148,7 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t being_operate_qq) {
     auto e = GroupAdminEvent(being_operate_qq, from_group, static_cast<GroupAdminEvent::SubType>(sub_type));
     call_all(_group_admin_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -164,6 +169,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
         e.sub_type = SubType::KICK_ME;
     }
     call_all(_group_member_decrease_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -178,6 +184,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
     auto e = GroupMemberIncreaseEvent(
         being_operate_qq, from_group, from_qq, static_cast<GroupMemberIncreaseEvent::SubType>(sub_type));
     call_all(_group_member_increase_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -194,6 +201,7 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
     auto e =
         GroupBanEvent(being_operate_qq, from_group, from_qq, static_cast<GroupBanEvent::SubType>(sub_type), duration);
     call_all(_group_ban_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -204,6 +212,7 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {
     auto e = FriendAddEvent(from_qq);
     call_all(_friend_add_callbacks, e);
+    call_all(_notice_callbacks, e);
     return e.operation;
 }
 
@@ -220,6 +229,7 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
     auto e = FriendRequestEvent(string_from_coolq(msg), string_from_coolq(response_flag), from_qq);
     call_all(_friend_request_callbacks, e);
+    call_all(_request_callbacks, e);
     return e.operation;
 }
 
@@ -237,6 +247,7 @@ __CQ_EVENT(int32_t, cq_event_group_request, 32)
                                from_group,
                                static_cast<GroupRequestEvent::SubType>(sub_type));
     call_all(_group_request_callbacks, e);
+    call_all(_request_callbacks, e);
     return e.operation;
 }
 
