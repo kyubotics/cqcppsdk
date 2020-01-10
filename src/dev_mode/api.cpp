@@ -257,7 +257,7 @@ namespace cq {
         return false;
     }
 
-    void add_log(int32_t level, const std::string &tag, const std::string &message) {
+    void add_log(const int32_t level, const std::string &tag, const std::string &message) {
         cout << "add_log" << endl;
         cout << "  level: " << level << endl;
         cout << "  tag: " << tag << endl;

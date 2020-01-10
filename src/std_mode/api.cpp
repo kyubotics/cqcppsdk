@@ -254,7 +254,7 @@ namespace cq {
         return raw::CQ_canSendRecord(__ac);
     }
 
-    void add_log(int32_t level, const std::string &tag, const std::string &message) {
+    void add_log(const int32_t level, const std::string &tag, const std::string &message) {
         chk(raw::CQ_addLog(__ac, level, string_to_coolq(tag).c_str(), string_to_coolq(message).c_str()));
     }
 

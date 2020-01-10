@@ -126,5 +126,5 @@ namespace cq {
     bool can_send_record();
 
     // 添加日志(建议使用 cq::logging 模块, 而不是直接使用此函数)
-    void add_log(int32_t level, const std::string &tag, const std::string &message);
+    void add_log(const int32_t level, const std::string &tag, const std::string &message);
 } // namespace cq
