@@ -9,6 +9,7 @@
 #include "../core/api.h"
 #include "../core/common.h"
 #include "../core/event.h"
+#include "../core/event_callback.h"
 #include "../core/init.h"
 #include "../utils/function.h"
 #include "./mock.h"

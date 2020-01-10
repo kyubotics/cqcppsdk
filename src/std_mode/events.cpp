@@ -2,7 +2,8 @@
 
 #include "../core/api.h"
 #include "../core/event.h"
-#include "../core/export_event_def.h"
+#include "../core/event_callback.h"
+#include "../core/event_export_def.h"
 #include "../core/init.h"
 #include "../utils/function.h"
 #include "../utils/string.h"
