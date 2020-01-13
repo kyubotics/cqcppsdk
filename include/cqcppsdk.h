@@ -8,3 +8,4 @@
 #include "../src/core/init.h"
 #include "../src/core/logging.h"
 #include "../src/core/menu.h"
+#include "../src/core/message.h"
