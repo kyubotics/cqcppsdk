@@ -4,6 +4,7 @@
 #include <locale>
 
 #if defined(_CQ_STD_MODE)
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
