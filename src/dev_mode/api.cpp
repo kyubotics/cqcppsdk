@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "../core/dir.h"
+#include "../core/event.h"
 #include "./mock.h"
 
 using namespace std;
@@ -140,11 +141,11 @@ namespace cq {
         cout << "  remark: " << remark << endl;
     }
 
-    void set_group_request(const std::string &flag, const std::string &sub_type,
+    void set_group_request(const std::string &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason) {
         cout << "set_group_request" << endl;
         cout << "  flag: " << flag << endl;
-        cout << "  sub_type: " << sub_type << endl;
+        cout << "  sub_type: " << to_string(sub_type) << endl;
         cout << "  operation: " << operation << endl;
         cout << "  reason: " << reason << endl;
     }
