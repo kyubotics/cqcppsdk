@@ -22,7 +22,6 @@ endfunction()
 
 # 添加酷Q应用构建目标, 在调用之前设置 CQCPPSDK_DEV_MODE 为 ON 可构建 dev 模式的可执行文件
 function(cq_add_app OUT_NAME SOURCE_FILES)
-    option(CQCPPSDK_DEV_MODE "是否启用 dev 模式" OFF)
     message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
 
     if(CQCPPSDK_DEV_MODE)
