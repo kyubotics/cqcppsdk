@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <functional>
+#include <limits>
 #include <string>
 
 namespace cq::utils {
@@ -50,7 +51,7 @@ namespace cq::utils {
     }
 
     inline int isspace_s(int ch) {
-        return ch >= 0 && ch <= UCHAR_MAX ? std::isspace(ch) : 0;
+        return ch >= 0 && ch <= std::numeric_limits<unsigned char>::max() ? std::isspace(ch) : 0;
     }
 
     inline void string_ltrim(std::string &s) {

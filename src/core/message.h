@@ -16,6 +16,26 @@ namespace cq::message {
         std::string type; // 消息段类型 (即 CQ 码的功能名)
         std::map<std::string, std::string> data; // 消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
 
+        // 转换为字符串形式
+        operator std::string() const {
+            std::string s;
+            if (this->type.empty()) {
+                return s;
+            }
+            if (this->type == "text") {
+                if (const auto it = this->data.find("text"); it != this->data.end()) {
+                    s += escape((*it).second, false);
+                }
+            } else {
+                s += "[CQ:" + this->type;
+                for (const auto &item : this->data) {
+                    s += "," + item.first + "=" + escape(item.second, true);
+                }
+                s += "]";
+            }
+            return s;
+        }
+
         // 纯文本
         static MessageSegment text(const std::string &text) {
             return {"text", {{"text", text}}};
@@ -141,24 +161,10 @@ namespace cq::message {
 
         // 将 Message 对象转换为字符串形式的消息
         operator std::string() const {
-            std::string s;
-            for (auto seg : *this) {
-                if (seg.type.empty()) {
-                    continue;
-                }
-                if (seg.type == "text") {
-                    if (const auto it = seg.data.find("text"); it != seg.data.end()) {
-                        s += escape((*it).second, false);
-                    }
-                } else {
-                    s += "[CQ:" + seg.type;
-                    for (const auto &item : seg.data) {
-                        s += "," + item.first + "=" + escape(item.second, true);
-                    }
-                    s += "]";
-                }
-            }
-            return s;
+            return std::transform_reduce(
+                std::execution::par, this->begin(), this->end(), std::string(), std::plus<>(), [](const auto &seg) {
+                    return std::string(seg);
+                });
         }
 
         // 向指定主体发送消息
@@ -239,13 +245,21 @@ namespace cq::message {
     };
 
     template <typename T>
-    Message operator+(const T &lhs, const Message &rhs) {
+    inline Message operator+(const T &lhs, const Message &rhs) {
         return Message(lhs) + rhs;
     }
 
     template <typename T>
-    Message operator+(const MessageSegment &lhs, const T &rhs) {
+    inline Message operator+(const MessageSegment &lhs, const T &rhs) {
         return Message(lhs) + rhs;
+    }
+
+    inline bool operator==(const MessageSegment &lhs, const MessageSegment &rhs) {
+        return std::string(lhs) == std::string(rhs);
+    }
+
+    inline bool operator==(const Message &lhs, const Message &rhs) {
+        return std::string(lhs) == std::string(rhs);
     }
 } // namespace cq::message
 
