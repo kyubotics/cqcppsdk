@@ -11,7 +11,7 @@
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
-#define NO_MIN_MAX
+#define NOMINMAX
 #include <Windows.h>
 #undef IGNORE // 避免名字冲突
 #include <fcntl.h>
