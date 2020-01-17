@@ -1,3 +1,7 @@
+/**
+ * 本文件用于定义提供给酷Q调用的事件处理函数, 参数类型和参数名保持与酷Q原生一致.
+ */
+
 #include "../core/common.h"
 
 #include "../core/api.h"
@@ -99,7 +103,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
  const char *msg, int32_t font) {
     Anonymous anonymous;
     try {
-        anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous_base64));
+        anonymous = ObjectHelper::from_base64<Anonymous>(from_anonymous_base64);
     } catch (ParseError &) {
     }
     auto e = GroupMessageEvent(
@@ -131,7 +135,7 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file_base64) {
     File file;
     try {
-        file = ObjectHelper::from_base64<File>(string_from_coolq(file_base64));
+        file = ObjectHelper::from_base64<File>(file_base64);
     } catch (ParseError &) {
     }
     auto e = GroupUploadEvent(from_qq, from_group, std::move(file));

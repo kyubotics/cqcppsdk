@@ -160,54 +160,50 @@ namespace cq {
     }
 
     User get_stranger_info(const int64_t user_id, const bool no_cache) {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getStrangerInfo(__ac, user_id, no_cache)));
         try {
-            return ObjectHelper::from_base64<User>(b64);
+            return ObjectHelper::from_base64<User>(chk(raw::CQ_getStrangerInfo(__ac, user_id, no_cache)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
     }
 
     std::vector<Friend> get_friend_list() {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getFriendList(__ac, false)));
         try {
-            return ObjectHelper::multi_from_base64<std::vector<Friend>>(b64);
+            return ObjectHelper::multi_from_base64<std::vector<Friend>>(chk(raw::CQ_getFriendList(__ac, false)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
     }
 
     std::vector<Group> get_group_list() {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getGroupList(__ac)));
         try {
-            return ObjectHelper::multi_from_base64<std::vector<Group>>(b64);
+            return ObjectHelper::multi_from_base64<std::vector<Group>>(chk(raw::CQ_getGroupList(__ac)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
     }
 
     Group get_group_info(const int64_t group_id, const bool no_cache) {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getGroupInfo(__ac, group_id, no_cache)));
         try {
-            return ObjectHelper::from_base64<Group>(b64);
+            return ObjectHelper::from_base64<Group>(chk(raw::CQ_getGroupInfo(__ac, group_id, no_cache)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
     }
 
     std::vector<GroupMember> get_group_member_list(const int64_t group_id) {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getGroupMemberList(__ac, group_id)));
         try {
-            return ObjectHelper::multi_from_base64<std::vector<GroupMember>>(b64);
+            return ObjectHelper::multi_from_base64<std::vector<GroupMember>>(
+                chk(raw::CQ_getGroupMemberList(__ac, group_id)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
     }
 
     GroupMember get_group_member_info(const int64_t group_id, const int64_t user_id, const bool no_cache) {
-        const auto b64 = string_from_coolq(chk(raw::CQ_getGroupMemberInfoV2(__ac, group_id, user_id, no_cache)));
         try {
-            return ObjectHelper::from_base64<GroupMember>(b64);
+            return ObjectHelper::from_base64<GroupMember>(
+                chk(raw::CQ_getGroupMemberInfoV2(__ac, group_id, user_id, no_cache)));
         } catch (ParseError &) {
             throw ApiError(ApiError::INVALID_DATA);
         }
