@@ -7,7 +7,8 @@
 #include "./exception.h"
 
 namespace cq {
-    struct ObjectHelper {
+    class ObjectHelper {
+    public:
         // 从 Base64 字符串解析数据对象,
         // 注意, 与 T::from_bytes 不同, 后者从二进制数据中提取对象
         template <typename T>
@@ -49,14 +50,17 @@ namespace cq {
 
     // 用户信息
     struct User {
-        const static size_t MIN_SIZE = 18;
-
         int64_t user_id = 0; // 用户 Id (QQ 号)
         std::string nickname; // 昵称
         Sex sex = Sex::UNKNOWN; // 性别
         int32_t age = 0; // 年龄
 
-        static User from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 18;
+
+        friend class ObjectHelper;
+
+        static User from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             User stranger;
             try {
@@ -73,13 +77,16 @@ namespace cq {
 
     // 好友信息
     struct Friend : User {
-        const static size_t MIN_SIZE = 12;
-
         // int64_t user_id; // 继承自 User 类
         // std::string nickname; // 继承自 User 类
         std::string remark; // 备注
 
-        static Friend from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 12;
+
+        friend class ObjectHelper;
+
+        static Friend from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             Friend frnd;
             try {
@@ -99,14 +106,17 @@ namespace cq {
 
     // 群信息
     struct Group {
-        const static size_t MIN_SIZE = 10;
-
         int64_t group_id = 0; // 群号
         std::string group_name; // 群名
         int32_t member_count = 0; // 成员数, 仅 get_group_info() 返回
         int32_t max_member_count = 0; // 最大成员数(容量), 仅 get_group_info() 返回
 
-        static Group from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 10;
+
+        friend class ObjectHelper;
+
+        static Group from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             Group group;
             try {
@@ -128,8 +138,6 @@ namespace cq {
 
     // 群成员信息
     struct GroupMember : User {
-        const static size_t MIN_SIZE = 58;
-
         int64_t group_id = 0; // 群号
         // int64_t user_id; // 继承自 User 类
         // std::string nickname; // 继承自 User 类
@@ -146,7 +154,12 @@ namespace cq {
         int32_t title_expire_time = 0; // 头衔过期时间
         bool card_changeable = false; // 是否可修改名片
 
-        static GroupMember from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 58;
+
+        friend class ObjectHelper;
+
+        static GroupMember from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             GroupMember member;
             try {
@@ -174,14 +187,17 @@ namespace cq {
 
     // 匿名信息
     struct Anonymous {
-        const static size_t MIN_SIZE = 12;
-
         int64_t id = 0; // Id, 具体含义不明
         std::string name; // 匿名昵称
         std::string token; // 一串二进制数据, 具体含义不明
         std::string flag; // 整个 Anonymous 对象的 Base64 编码字符串, 可视为匿名标识
 
-        static Anonymous from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 12;
+
+        friend class ObjectHelper;
+
+        static Anonymous from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             Anonymous anonymous;
             try {
@@ -205,14 +221,17 @@ namespace cq {
 
     // 文件信息
     struct File {
-        const static size_t MIN_SIZE = 20;
-
         std::string id; // Id
         std::string name; // 名称
         int64_t size = 0; // 大小(字节)
         int64_t busid = 0; // 某种 Id, 具体含义不明
 
-        static File from_bytes(const std::string &bytes) {
+    private:
+        const static size_t MIN_SIZE = 20;
+
+        friend class ObjectHelper;
+
+        static File from_bytes(std::string &&bytes) {
             auto pack = utils::BinPack(bytes);
             File file;
             try {

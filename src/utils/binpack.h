@@ -6,7 +6,7 @@
 
 namespace cq {
     struct BytesNotEnough : LogicError {
-        BytesNotEnough(const size_t have, const size_t needed)
+        BytesNotEnough(size_t have, size_t needed)
             : LogicError("there aren't enough bytes remained (have " + std::to_string(have) + ", but "
                          + std::to_string(needed) + " are/is needed)") {
         }
@@ -22,6 +22,9 @@ namespace cq::utils {
         explicit BinPack(const std::string &b) : bytes_(b), curr_(0) {
         }
 
+        explicit BinPack(std::string &&b) : bytes_(std::move(b)), curr_(0) {
+        }
+
         size_t size() const noexcept {
             return bytes_.size() - curr_;
         }
@@ -31,7 +34,7 @@ namespace cq::utils {
         }
 
         template <typename IntType>
-        IntType pop_int() noexcept(false) {
+        IntType pop_int() {
             constexpr auto size = sizeof(IntType);
             check_enough(size);
 
@@ -44,7 +47,7 @@ namespace cq::utils {
             return result;
         }
 
-        std::string pop_string() noexcept(false) {
+        std::string pop_string() {
             const auto len = pop_int<int16_t>();
             if (len == 0) {
                 return std::string();
@@ -55,17 +58,17 @@ namespace cq::utils {
             return result;
         }
 
-        std::string pop_bytes(const size_t len) noexcept(false) {
+        std::string pop_bytes(const size_t len) {
             auto result = bytes_.substr(curr_, len);
             curr_ += len;
             return result;
         }
 
-        std::string pop_token() noexcept(false) {
+        std::string pop_token() {
             return pop_bytes(pop_int<int16_t>());
         }
 
-        bool pop_bool() noexcept(false) {
+        bool pop_bool() {
             return static_cast<bool>(pop_int<int32_t>());
         }
 
@@ -73,7 +76,7 @@ namespace cq::utils {
         std::string bytes_;
         size_t curr_;
 
-        void check_enough(const size_t needed) const noexcept(false) {
+        void check_enough(const size_t needed) const {
             if (size() < needed) {
                 throw BytesNotEnough(size(), needed);
             }
