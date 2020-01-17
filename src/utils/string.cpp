@@ -1,28 +1,15 @@
 #include "./string.h"
 
-#include <codecvt>
-#include <locale>
-
 #if defined(_CQ_STD_MODE)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 
-using namespace std;
-
 namespace cq::utils {
-    string ws2s(const wstring &ws) {
-        return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().to_bytes(ws);
-    }
-
-    wstring s2ws(const string &s) {
-        return wstring_convert<codecvt_utf8<wchar_t>, wchar_t>().from_bytes(s);
-    }
-
     std::string string_convert_encoding(const std::string &text, const std::string &from_enc, const std::string &to_enc,
                                         float capability_factor) {
 #if defined(_CQ_STD_MODE)
-        // 正在使用标准模式, 经过酷Q的字符串可使用 libiconv 转码
+        // 正在使用 std 模式, 经过酷Q的字符串可使用 libiconv 转码
         using iconv_t = void *;
         static HMODULE iconv_dll = nullptr;
         static iconv_t (*iconv_open)(const char *, const char *) = nullptr;
@@ -38,7 +25,7 @@ namespace cq::utils {
             iconv_close = reinterpret_cast<int (*)(iconv_t)>(GetProcAddress(iconv_dll, "libiconv_close"));
         }
 
-        string result;
+        std::string result;
 
         const auto cd = iconv_open(to_enc.c_str(), from_enc.c_str());
         auto in = const_cast<char *>(text.data());
@@ -66,7 +53,7 @@ namespace cq::utils {
 
         return result;
 #else
-        return text;
+        return text; // Dev 模式下原样返回
 #endif
     }
 } // namespace cq::utils

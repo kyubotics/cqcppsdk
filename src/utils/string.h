@@ -2,13 +2,20 @@
 
 #include <algorithm>
 #include <cctype>
+#include <codecvt>
 #include <functional>
 #include <limits>
+#include <locale>
 #include <string>
 
 namespace cq::utils {
-    std::string ws2s(const std::wstring &ws);
-    std::wstring s2ws(const std::string &s);
+    inline std::string ws2s(const std::wstring &ws) {
+        return std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>().to_bytes(ws);
+    }
+
+    inline std::wstring s2ws(const std::string &s) {
+        return std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>().from_bytes(s);
+    }
 
     std::string string_convert_encoding(const std::string &text, const std::string &from_enc, const std::string &to_enc,
                                         float capability_factor);
