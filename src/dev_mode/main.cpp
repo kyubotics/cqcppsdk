@@ -27,10 +27,11 @@ static void prompt() {
     cout << endl << ">>> ";
 }
 
-static void process(const string &msg) {
+static void process(string msg) {
     static int64_t message_id = 0;
 
-    auto e = PrivateMessageEvent(++message_id, msg, 0, FAKE_OTHER_USER_ID, PrivateMessageEvent::SubType::FRIEND);
+    auto e =
+        PrivateMessageEvent(++message_id, std::move(msg), 0, FAKE_OTHER_USER_ID, PrivateMessageEvent::SubType::FRIEND);
     call_all(_private_message_callbacks, e);
     call_all(_message_callbacks, e);
 }

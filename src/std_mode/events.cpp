@@ -88,25 +88,25 @@ __CQ_EVENT(int32_t, cq_event_private_message, 24)
                                  static_cast<PrivateMessageEvent::SubType>(sub_type));
     call_all(_private_message_callbacks, e);
     call_all(_message_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
  * Type=2 群消息
  */
 __CQ_EVENT(int32_t, cq_event_group_message, 36)
-(int32_t sub_type, int32_t msg_id, int64_t from_group, int64_t from_qq, const char *from_anonymous, const char *msg,
- int32_t font) {
+(int32_t sub_type, int32_t msg_id, int64_t from_group, int64_t from_qq, const char *from_anonymous_base64,
+ const char *msg, int32_t font) {
     Anonymous anonymous;
     try {
-        anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous));
+        anonymous = ObjectHelper::from_base64<Anonymous>(string_from_coolq(from_anonymous_base64));
     } catch (ParseError &) {
     }
-    auto e =
-        GroupMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_group, anonymous);
+    auto e = GroupMessageEvent(
+        static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_group, std::move(anonymous));
     call_all(_group_message_callbacks, e);
     call_all(_message_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -117,7 +117,7 @@ __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
     auto e = DiscussMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_discuss);
     call_all(_discuss_message_callbacks, e);
     call_all(_message_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 #pragma endregion
@@ -128,16 +128,16 @@ __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
  * Type=11 群事件-文件上传
  */
 __CQ_EVENT(int32_t, cq_event_group_upload, 28)
-(int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file) {
-    File f;
+(int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *file_base64) {
+    File file;
     try {
-        f = ObjectHelper::from_base64<File>(string_from_coolq(file));
+        file = ObjectHelper::from_base64<File>(string_from_coolq(file_base64));
     } catch (ParseError &) {
     }
-    auto e = GroupUploadEvent(from_qq, from_group, f);
+    auto e = GroupUploadEvent(from_qq, from_group, std::move(file));
     call_all(_group_upload_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -149,7 +149,7 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
     auto e = GroupAdminEvent(being_operate_qq, from_group, static_cast<GroupAdminEvent::SubType>(sub_type));
     call_all(_group_admin_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -170,7 +170,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
     }
     call_all(_group_member_decrease_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -185,7 +185,7 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
         being_operate_qq, from_group, from_qq, static_cast<GroupMemberIncreaseEvent::SubType>(sub_type));
     call_all(_group_member_increase_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -202,7 +202,7 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
         GroupBanEvent(being_operate_qq, from_group, from_qq, static_cast<GroupBanEvent::SubType>(sub_type), duration);
     call_all(_group_ban_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -213,7 +213,7 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
     auto e = FriendAddEvent(from_qq);
     call_all(_friend_add_callbacks, e);
     call_all(_notice_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 #pragma endregion
@@ -230,7 +230,7 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
     auto e = FriendRequestEvent(string_from_coolq(msg), string_from_coolq(response_flag), from_qq);
     call_all(_friend_request_callbacks, e);
     call_all(_request_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 /**
@@ -248,7 +248,7 @@ __CQ_EVENT(int32_t, cq_event_group_request, 32)
                                static_cast<GroupRequestEvent::SubType>(sub_type));
     call_all(_group_request_callbacks, e);
     call_all(_request_callbacks, e);
-    return e.operation;
+    return static_cast<int32_t>(e.operation);
 }
 
 #pragma endregion
