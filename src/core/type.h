@@ -190,7 +190,7 @@ namespace cq {
         int64_t id = 0; // Id, 具体含义不明
         std::string name; // 匿名昵称
         std::string token; // 一串二进制数据, 具体含义不明
-        std::string flag; // 整个 Anonymous 对象的 Base64 编码字符串, 可视为匿名标识
+        std::string base64; // 整个 Anonymous 对象的 Base64 编码字符串
 
     private:
         const static size_t MIN_SIZE = 12;
@@ -204,7 +204,7 @@ namespace cq {
                 anonymous.id = pack.pop_int<int64_t>();
                 anonymous.name = pack.pop_string();
                 anonymous.token = pack.pop_token();
-                // 注意: 这里不给 flag 属性赋值, 而是在下面特化的 ObjectHelper::from_base64 函数中赋值
+                // 注意: 这里不给 base64 属性赋值, 而是在下面特化的 ObjectHelper::from_base64 函数中赋值
             } catch (BytesNotEnough &) {
                 throw ParseError("failed to parse from bytes to an Anonymous object");
             }
@@ -215,7 +215,7 @@ namespace cq {
     template <>
     inline Anonymous ObjectHelper::from_base64<Anonymous>(const std::string &b64) {
         auto anonymous = Anonymous::from_bytes(utils::base64_decode(b64));
-        anonymous.flag = b64;
+        anonymous.base64 = b64;
         return anonymous;
     }
 

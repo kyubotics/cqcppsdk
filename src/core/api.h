@@ -61,7 +61,7 @@ namespace cq {
     // 群禁言成员
     void set_group_ban(const int64_t group_id, const int64_t user_id, const int64_t duration);
     // 群禁言匿名用户
-    void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration);
+    void set_group_anonymous_ban(const int64_t group_id, const Anonymous &anonymous, const int64_t duration);
     // 群全体禁言
     void set_group_whole_ban(const int64_t group_id, const bool enable);
     // 群设置管理员

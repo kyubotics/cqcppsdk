@@ -71,10 +71,10 @@ namespace cq {
             "set_group_ban", pair{"group_id", group_id}, pair{"user_id", user_id}, pair{"duration", duration});
     }
 
-    void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration) {
+    void set_group_anonymous_ban(const int64_t group_id, const Anonymous &anonymous, const int64_t duration) {
         print_api_call("set_group_anonymous_ban",
                        pair{"group_id", group_id},
-                       pair{"anonymous_flag", anonymous_flag},
+                       pair{"anonymous", anonymous.name},
                        pair{"duration", duration});
     }
 

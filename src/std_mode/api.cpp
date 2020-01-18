@@ -94,8 +94,8 @@ namespace cq {
         chk(raw::CQ_setGroupBan(__ac, group_id, user_id, duration));
     }
 
-    void set_group_anonymous_ban(const int64_t group_id, const std::string &anonymous_flag, const int64_t duration) {
-        chk(raw::CQ_setGroupAnonymousBan(__ac, group_id, string_to_coolq(anonymous_flag).c_str(), duration));
+    void set_group_anonymous_ban(const int64_t group_id, const Anonymous &anonymous, const int64_t duration) {
+        chk(raw::CQ_setGroupAnonymousBan(__ac, group_id, anonymous.base64.c_str(), duration));
     }
 
     void set_group_whole_ban(const int64_t group_id, const bool enable) {
