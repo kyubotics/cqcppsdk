@@ -43,9 +43,9 @@ CQ_INIT {
 CQ_MENU(menu_demo_1) { logging::info("菜单", "点击菜单1"); }
 ```
 
-## 文档
+## 使用方法
 
-使用方法请参考 [文档](https://cqcppsdk.cqp.moe/)。
+请参考 [文档](https://cqcppsdk.cqp.moe/)。**请不要在阅读文档之前直接下载本仓库代码，除非你知道你在做什么。**
 
 ## 问题反馈
 
