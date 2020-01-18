@@ -79,10 +79,10 @@ namespace cq {
     void set_discuss_leave(const int64_t discuss_id);
 
     // 处理好友请求
-    void set_friend_request(const std::string &flag, const RequestEvent::Operation operation,
+    void set_friend_request(const RequestEvent::Flag &flag, const RequestEvent::Operation operation,
                             const std::string &remark = "");
     // 处理群请求
-    void set_group_request(const std::string &flag, const GroupRequestEvent::SubType &sub_type,
+    void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason = "");
 
     // 获取登录号 Id (QQ 号)

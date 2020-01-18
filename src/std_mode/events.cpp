@@ -231,7 +231,7 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
  */
 __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
-    auto e = FriendRequestEvent(string_from_coolq(msg), string_from_coolq(response_flag), from_qq);
+    auto e = FriendRequestEvent(string_from_coolq(msg), {string_from_coolq(response_flag)}, from_qq);
     call_all(_friend_request_callbacks, e);
     call_all(_request_callbacks, e);
     return static_cast<int32_t>(e.operation);
@@ -246,7 +246,7 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 __CQ_EVENT(int32_t, cq_event_group_request, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *msg, const char *response_flag) {
     auto e = GroupRequestEvent(string_from_coolq(msg),
-                               string_from_coolq(response_flag),
+                               {string_from_coolq(response_flag)},
                                from_qq,
                                from_group,
                                static_cast<GroupRequestEvent::SubType>(sub_type));

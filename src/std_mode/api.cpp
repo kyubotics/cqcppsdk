@@ -131,13 +131,13 @@ namespace cq {
 
 #pragma region Request
 
-    void set_friend_request(const std::string &flag, const RequestEvent::Operation operation,
+    void set_friend_request(const RequestEvent::Flag &flag, const RequestEvent::Operation operation,
                             const std::string &remark) {
         chk(raw::CQ_setFriendAddRequest(
             __ac, string_to_coolq(flag).c_str(), static_cast<int32_t>(operation), string_to_coolq(remark).c_str()));
     }
 
-    void set_group_request(const std::string &flag, const GroupRequestEvent::SubType &sub_type,
+    void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason) {
         int32_t sub_type_i = 0;
         chk(raw::CQ_setGroupAddRequestV2(__ac,

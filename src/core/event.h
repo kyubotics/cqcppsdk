@@ -115,11 +115,20 @@ namespace cq {
             GROUP, // 群请求
         };
 
+        // 请求标识包装类
+        struct Flag {
+            std::string raw;
+
+            operator std::string() const {
+                return raw;
+            }
+        };
+
         DetailType detail_type; // 事件详细类型
         std::string comment; // 备注内容
-        std::string flag; // 请求标识
+        Flag flag; // 请求标识
 
-        RequestEvent(Target &&target, DetailType detail_type, std::string &&comment, std::string &&flag)
+        RequestEvent(Target &&target, DetailType detail_type, std::string &&comment, Flag &&flag)
             : UserEvent(REQUEST, std::move(target)),
               detail_type(detail_type),
               comment(std::move(comment)),
@@ -293,7 +302,7 @@ namespace cq {
     struct FriendRequestEvent final : RequestEvent, UserIdMixin {
         SubType sub_type = DEFAULT; // 默认事件子类型
 
-        FriendRequestEvent(std::string &&comment, std::string &&flag, int64_t user_id)
+        FriendRequestEvent(std::string &&comment, Flag &&flag, int64_t user_id)
             : RequestEvent(Target(user_id), FRIEND, std::move(comment), std::move(flag)), UserIdMixin{user_id} {
         }
     };
@@ -307,8 +316,7 @@ namespace cq {
 
         SubType sub_type; // 事件子类型
 
-        GroupRequestEvent(std::string &&comment, std::string &&flag, int64_t user_id, int64_t group_id,
-                          SubType sub_type)
+        GroupRequestEvent(std::string &&comment, Flag &&flag, int64_t user_id, int64_t group_id, SubType sub_type)
             : RequestEvent(Target(user_id, group_id, Target::GROUP), GROUP, std::move(comment), std::move(flag)),
               UserIdMixin{user_id},
               GroupIdMixin{group_id},

@@ -25,7 +25,7 @@ namespace cq {
     template <typename... PairFirst, typename... PairSecond>
     void print_api_call(const string &name, const pair<PairFirst, PairSecond> &... args) {
         cout << name << endl;
-        ((cout << "  " << args.first << ": " << boolalpha << args.second << endl), ...);
+        ((cout << "  " << to_string(args.first) << ": " << boolalpha << to_string(args.second) << endl), ...);
     }
 
     int64_t send_private_message(const int64_t user_id, const std::string &message) {
@@ -115,16 +115,16 @@ namespace cq {
 
 #pragma region Request
 
-    void set_friend_request(const std::string &flag, const RequestEvent::Operation operation,
+    void set_friend_request(const RequestEvent::Flag &flag, const RequestEvent::Operation operation,
                             const std::string &remark) {
         print_api_call("set_friend_request", pair{"flag", flag}, pair{"operation", operation}, pair{"remark", remark});
     }
 
-    void set_group_request(const std::string &flag, const GroupRequestEvent::SubType &sub_type,
+    void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason) {
         print_api_call("set_group_request",
                        pair{"flag", flag},
-                       pair{"sub_type", to_string(sub_type)},
+                       pair{"sub_type", sub_type},
                        pair{"operation", operation},
                        pair{"reason", reason});
     }
