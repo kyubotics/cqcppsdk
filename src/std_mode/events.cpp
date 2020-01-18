@@ -165,12 +165,12 @@ __CQ_EVENT(int32_t, cq_event_group_admin, 24)
 __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
     using SubType = GroupMemberDecreaseEvent::SubType;
-    auto e = GroupMemberDecreaseEvent(being_operate_qq,
-                                      from_group,
-                                      sub_type == SubType::LEAVE ? being_operate_qq : from_qq,
-                                      static_cast<SubType>(sub_type));
+    auto e = GroupMemberDecreaseEvent(being_operate_qq, from_group, from_qq, static_cast<SubType>(sub_type));
     if (being_operate_qq == get_login_user_id() && e.sub_type == SubType::KICK) {
         e.sub_type = SubType::KICK_ME;
+    }
+    if (e.sub_type == SubType::LEAVE) {
+        e.operator_id = e.user_id; // 主动退群, 操作者是退群者自己
     }
     call_all(_group_member_decrease_callbacks, e);
     call_all(_notice_callbacks, e);
