@@ -40,20 +40,20 @@ namespace cq {
 #undef FUNC
     } // namespace raw
 
-    template <typename T, typename enable_if<is_integral<T>::value>::type * = 0>
-    inline T chk(const T res) {
+    template <typename T, enable_if_t<is_integral_v<T>> * = nullptr>
+    inline decltype(auto) chk(T &&res) {
         if (res < 0) {
             throw ApiError(static_cast<int>(res));
         }
-        return res;
+        return std::forward<T>(res);
     }
 
-    template <typename T, typename enable_if<is_pointer<T>::value>::type * = 0>
-    inline T chk(const T res_ptr) {
+    template <typename T, enable_if_t<is_pointer_v<T>> * = nullptr>
+    inline decltype(auto) chk(T &&res_ptr) {
         if (!res_ptr) {
             throw ApiError(ApiError::INVALID_DATA);
         }
-        return res_ptr;
+        return std::forward<T>(res_ptr);
     }
 
 #pragma region Message
