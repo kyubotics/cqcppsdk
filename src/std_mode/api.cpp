@@ -41,7 +41,7 @@ namespace cq {
     } // namespace raw
 
     template <typename T, enable_if_t<is_integral_v<T>> * = nullptr>
-    inline decltype(auto) chk(T &&res) {
+    inline decltype(auto) chk(T &&res) noexcept(false) {
         if (res < 0) {
             throw ApiError(static_cast<int>(res));
         }
@@ -49,7 +49,7 @@ namespace cq {
     }
 
     template <typename T, enable_if_t<is_pointer_v<T>> * = nullptr>
-    inline decltype(auto) chk(T &&res_ptr) {
+    inline decltype(auto) chk(T &&res_ptr) noexcept(false) {
         if (!res_ptr) {
             throw ApiError(ApiError::INVALID_DATA);
         }

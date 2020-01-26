@@ -12,13 +12,13 @@ namespace cq {
         // 从 Base64 字符串解析数据对象,
         // 注意, 与 T::from_bytes 不同, 后者从二进制数据中提取对象
         template <typename T>
-        static T from_base64(const std::string &b64) {
+        static T from_base64(const std::string &b64) noexcept(false) {
             return T::from_bytes(utils::base64_decode(b64));
         }
 
         // 从 Base64 字符串解析数据对象集合
         template <typename Container>
-        static Container multi_from_base64(const std::string &b64) {
+        static Container multi_from_base64(const std::string &b64) noexcept(false) {
             Container result;
             auto inserter = std::back_inserter(result);
             auto pack = utils::BinPack(utils::base64_decode(b64));
@@ -60,7 +60,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static User from_bytes(std::string &&bytes) {
+        static User from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             User stranger;
             try {
@@ -86,7 +86,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static Friend from_bytes(std::string &&bytes) {
+        static Friend from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             Friend frnd;
             try {
@@ -116,7 +116,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static Group from_bytes(std::string &&bytes) {
+        static Group from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             Group group;
             try {
@@ -159,7 +159,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static GroupMember from_bytes(std::string &&bytes) {
+        static GroupMember from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             GroupMember member;
             try {
@@ -197,7 +197,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static Anonymous from_bytes(std::string &&bytes) {
+        static Anonymous from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             Anonymous anonymous;
             try {
@@ -231,7 +231,7 @@ namespace cq {
 
         friend class ObjectHelper;
 
-        static File from_bytes(std::string &&bytes) {
+        static File from_bytes(std::string &&bytes) noexcept(false) {
             auto pack = utils::BinPack(bytes);
             File file;
             try {

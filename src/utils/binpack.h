@@ -76,7 +76,7 @@ namespace cq::utils {
         std::string bytes_;
         size_t curr_;
 
-        void check_enough(const size_t needed) const {
+        void check_enough(const size_t needed) const noexcept(false) {
             if (size() < needed) {
                 throw BytesNotEnough(size(), needed);
             }
