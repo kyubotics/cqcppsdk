@@ -12,12 +12,15 @@ namespace cq {
         }
 
         virtual ~Event() = default;
+        Event(Event &&) = default;
+        Event &operator=(Event &&) = default;
+        Event(const Event &) = default;
+        Event &operator=(const Event &) = default;
     };
 
     // 保留备用
     struct SysEvent : Event {
         using Event::Event;
-        virtual ~SysEvent() = default;
     };
 
     // 用户事件
@@ -55,8 +58,6 @@ namespace cq {
 
         UserEvent(Type type, Target &&target) : type(type), target(std::move(target)) {
         }
-
-        virtual ~UserEvent() = default;
     };
 
     // 消息事件
@@ -79,8 +80,6 @@ namespace cq {
               message(std::move(message)),
               font(font) {
         }
-
-        virtual ~MessageEvent() = default;
     };
 
     // 通知事件
@@ -99,8 +98,6 @@ namespace cq {
         NoticeEvent(Target &&target, DetailType detail_type)
             : UserEvent(Type::NOTICE, std::move(target)), detail_type(detail_type) {
         }
-
-        virtual ~NoticeEvent() = default;
     };
 
     // 请求事件
@@ -134,8 +131,6 @@ namespace cq {
               comment(std::move(comment)),
               flag(std::move(flag)) {
         }
-
-        virtual ~RequestEvent() = default;
     };
 
     struct UserIdMixin {
