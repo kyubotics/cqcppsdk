@@ -21,7 +21,7 @@ function(cq_set_app_id APP_ID)
 endfunction()
 
 # 添加酷Q应用构建目标, 在调用之前设置 CQCPPSDK_DEV_MODE 为 ON 可构建 dev 模式的可执行文件
-function(cq_add_app OUT_NAME SOURCE_FILES)
+function(cq_add_app OUT_NAME)
     message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
 
     if(CQCPPSDK_DEV_MODE)
@@ -29,13 +29,13 @@ function(cq_add_app OUT_NAME SOURCE_FILES)
         add_definitions(-D_CQ_DEV_MODE)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/dev_mode/*.cpp)
         message(STATUS "add dev mode executable: ${OUT_NAME}")
-        add_executable(${OUT_NAME} ${SOURCE_FILES} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+        add_executable(${OUT_NAME} ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
     else()
         # Std 模式, 产生 Windows 动态链接库, 即可被酷Q加载的插件(进而可打包为 CPK), 仅限 Windows 上使用 MSVC x86 工具链构建
         add_definitions(-D_CQ_STD_MODE)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/std_mode/*.cpp)
         message(STATUS "add std mode dll: ${OUT_NAME}")
-        add_library(${OUT_NAME} SHARED ${SOURCE_FILES} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+        add_library(${OUT_NAME} SHARED ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
     endif()
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
