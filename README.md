@@ -49,6 +49,12 @@ CQ_MENU(menu_demo_1) { logging::info("菜单", "点击菜单1"); }
 
 请参考 [文档](https://cqcppsdk.cqp.moe/)。**请不要在阅读文档之前直接下载本仓库代码，除非你知道你在做什么。**
 
+## 应用案例
+
+项目 | 简介
+--- | ---
+[richardchien/xiaofan-bot](https://github.com/richardchien/xiaofan-bot) | CQMOE 小秘书莫小凡
+
 ## 问题反馈
 
 如果使用过程中遇到任何问题、Bug，或有其它意见或建议，欢迎提 [issue](https://github.com/cqmoe/cqcppsdk/issues/new)。
