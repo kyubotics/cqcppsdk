@@ -161,9 +161,7 @@ namespace cq::message {
 
         // 将 Message 对象转换为字符串形式的消息
         operator std::string() const {
-            return std::transform_reduce(this->begin(), this->end(), std::string(), std::plus<>(), [](const auto &seg) {
-                return std::string(seg);
-            });
+            return std::accumulate(this->begin(), this->end(), std::string());
         }
 
         // 向指定主体发送消息
