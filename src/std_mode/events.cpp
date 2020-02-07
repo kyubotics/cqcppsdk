@@ -85,10 +85,10 @@ __CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
  */
 __CQ_EVENT(int32_t, cq_event_private_message, 24)
 (int32_t sub_type, int32_t msg_id, int64_t from_qq, const char *msg, int32_t font) {
-    auto e = PrivateMessageEvent(static_cast<int64_t>(msg_id),
+    auto e = PrivateMessageEvent(from_qq,
+                                 static_cast<int64_t>(msg_id),
                                  string_from_coolq(msg),
                                  font,
-                                 from_qq,
                                  static_cast<PrivateMessageEvent::SubType>(sub_type));
     call_all(_private_message_callbacks, e);
     call_all(_message_callbacks, e);
@@ -107,7 +107,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
     } catch (ParseError &) {
     }
     auto e = GroupMessageEvent(
-        static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_group, std::move(anonymous));
+        from_qq, static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_group, std::move(anonymous));
     call_all(_group_message_callbacks, e);
     call_all(_message_callbacks, e);
     return static_cast<int32_t>(e.operation);
@@ -118,7 +118,7 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
  */
 __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
-    auto e = DiscussMessageEvent(static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_qq, from_discuss);
+    auto e = DiscussMessageEvent(from_qq, static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_discuss);
     call_all(_discuss_message_callbacks, e);
     call_all(_message_callbacks, e);
     return static_cast<int32_t>(e.operation);
@@ -231,7 +231,7 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
  */
 __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
-    auto e = FriendRequestEvent(string_from_coolq(msg), {string_from_coolq(response_flag)}, from_qq);
+    auto e = FriendRequestEvent(from_qq, string_from_coolq(msg), {string_from_coolq(response_flag)});
     call_all(_friend_request_callbacks, e);
     call_all(_request_callbacks, e);
     return static_cast<int32_t>(e.operation);
@@ -245,9 +245,9 @@ __CQ_EVENT(int32_t, cq_event_friend_request, 24)
  */
 __CQ_EVENT(int32_t, cq_event_group_request, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, const char *msg, const char *response_flag) {
-    auto e = GroupRequestEvent(string_from_coolq(msg),
+    auto e = GroupRequestEvent(from_qq,
+                               string_from_coolq(msg),
                                {string_from_coolq(response_flag)},
-                               from_qq,
                                from_group,
                                static_cast<GroupRequestEvent::SubType>(sub_type));
     call_all(_group_request_callbacks, e);

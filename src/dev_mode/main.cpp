@@ -31,7 +31,7 @@ static void process(string msg) {
     static int64_t message_id = 0;
 
     auto e =
-        PrivateMessageEvent(++message_id, std::move(msg), 0, FAKE_OTHER_USER_ID, PrivateMessageEvent::SubType::FRIEND);
+        PrivateMessageEvent(FAKE_OTHER_USER_ID, ++message_id, std::move(msg), 0, PrivateMessageEvent::SubType::FRIEND);
     call_all(_private_message_callbacks, e);
     call_all(_message_callbacks, e);
 }
