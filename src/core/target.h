@@ -45,5 +45,20 @@ namespace cq {
         static Target discuss(const int64_t discuss_id) {
             return Target(discuss_id, DISCUSS);
         }
+
+        // 判断主体是否来自私聊消息、私人通知、私人请求等
+        bool is_private() const {
+            return user_id.has_value() && !group_id.has_value() && !discuss_id.has_value();
+        }
+
+        // 判断主体是否来自群消息、群通知、群请求等
+        bool is_group() const {
+            return group_id.has_value() && !discuss_id.has_value();
+        }
+
+        // 判断主体是否来自讨论组
+        bool is_discuss() const {
+            return discuss_id.has_value() && !group_id.has_value();
+        }
     };
 } // namespace cq
