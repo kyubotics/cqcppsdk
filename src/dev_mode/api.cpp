@@ -22,10 +22,10 @@ namespace cq {
 
     static int64_t message_id = 0;
 
-    template <typename... PairFirst, typename... PairSecond>
-    void print_api_call(const string &name, const pair<PairFirst, PairSecond> &... args) {
+    template <typename... Args>
+    void print_api_call(const string &name, const pair<const char *, Args> &... args) {
         cout << name << endl;
-        ((cout << "  " << to_string(args.first) << ": " << boolalpha << to_string(args.second) << endl), ...);
+        ((cout << "  " << string(args.first) << ": " << boolalpha << to_string(args.second) << endl), ...);
     }
 
     int64_t send_private_message(const int64_t user_id, const std::string &message) {
