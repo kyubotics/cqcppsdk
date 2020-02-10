@@ -30,23 +30,24 @@ function(cq_add_app OUT_NAME)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/dev_mode/*.cpp)
         message(STATUS "add dev mode executable: ${OUT_NAME}")
         add_executable(${OUT_NAME} ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
-        if (NOT MSVC)
-            target_link_options(${OUT_NAME} PRIVATE -static)
-        endif()
     else()
         # Std 模式, 产生 Windows 动态链接库, 即可被酷Q加载的插件(进而可打包为 CPK), 仅限 Windows 上使用 MSVC x86 工具链构建
         add_definitions(-D_CQ_STD_MODE)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/std_mode/*.cpp)
         message(STATUS "add std mode dll: ${OUT_NAME}")
         add_library(${OUT_NAME} SHARED ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
-        if (NOT MSVC)
-            target_link_options(${OUT_NAME} PRIVATE -static -Wl,--kill-at,--enable-stdcall-fixup)
-        endif()
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-        # 在 GCC 8.x 环境下使用 std::filesystem 需要链接 stdc++fs
-        target_link_libraries(${OUT_NAME} stdc++fs)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # MinGW 编译时，静态链接libgcc等库，去除stdcall的<@数字>后缀，支持导入stdcall的dll(--enable-stdcall-fixup)
+        if (NOT CQCPPSDK_DEV_MODE)
+            target_link_options(${OUT_NAME} PRIVATE -static -Wl,--kill-at,--enable-stdcall-fixup)
+        endif()
+
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+            # 在 GCC 8.x 环境下使用 std::filesystem 需要链接 stdc++fs
+            target_link_libraries(${OUT_NAME} stdc++fs)
+        endif()
     endif()
 endfunction()
 
