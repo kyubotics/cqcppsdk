@@ -40,7 +40,7 @@ function(cq_add_app OUT_NAME)
         message(STATUS "add std mode dll: ${OUT_NAME}")
         add_library(${OUT_NAME} SHARED ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
         if (NOT MSVC)
-            target_link_options(${OUT_NAME} PRIVATE -static -Wl,--kill-at,--enable-stdcall-fixup PUBLIC -static -Wl,--kill-at,--enable-stdcall-fixup)
+            target_link_options(${OUT_NAME} PRIVATE -static -Wl,--kill-at,--enable-stdcall-fixup)
         endif()
     endif()
 
