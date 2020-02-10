@@ -188,7 +188,7 @@ namespace cq {
 #pragma region CoolQ
 
     std::string get_cookies(const std::string &domain) {
-        print_api_call("get_cookies");
+        print_api_call("get_cookies", pair{"domain", domain});
         return "uin=" + to_string(FAKE_LOGIN_USER_ID);
     }
 
@@ -212,12 +212,12 @@ namespace cq {
     }
 
     std::string get_image(const std::string &file) {
-        print_api_call("get_image");
+        print_api_call("get_image", pair{"file", file});
         return "";
     }
 
     std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
-        print_api_call("get_record");
+        print_api_call("get_record", pair{"file", file}, pair{"out_format", out_format}, pair{"full_path", full_path});
         return "";
     }
 
