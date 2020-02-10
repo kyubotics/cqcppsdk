@@ -20,7 +20,7 @@ namespace cq::utils {
 
     template <typename Cont, typename... Args>
     inline void call_all(const Cont &funcs, Args &&... args) {
-        for (const auto f : funcs) {
+        for (const auto &f : funcs) {
             call_if_valid(f, std::forward<Args>(args)...);
         }
     }

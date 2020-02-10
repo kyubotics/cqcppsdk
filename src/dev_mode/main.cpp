@@ -32,8 +32,8 @@ static void process(string msg) {
 
     auto e =
         PrivateMessageEvent(FAKE_OTHER_USER_ID, ++message_id, std::move(msg), 0, PrivateMessageEvent::SubType::FRIEND);
-    call_all(_private_message_callbacks, e);
-    call_all(_message_callbacks, e);
+    call_all(cq::_private_message_callbacks, e);
+    call_all(cq::_message_callbacks, e);
 }
 
 static unsigned old_code_page;

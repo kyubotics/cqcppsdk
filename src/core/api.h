@@ -9,7 +9,8 @@
 namespace cq {
     // API 调用失败
     struct ApiError : RuntimeError {
-        ApiError(const int code) : RuntimeError("failed to call coolq api"), code(code) {
+        ApiError(const int code)
+            : RuntimeError("failed to call coolq api, error code: " + std::to_string(code)), code(code) {
         }
 
         const int code; // 错误码
