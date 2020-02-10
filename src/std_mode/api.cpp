@@ -30,12 +30,22 @@ namespace cq {
     }
 
     namespace raw {
+#if defined(_MSC_VER)
 #define FUNC(ReturnType, FuncName, ...)                                                              \
     typedef __declspec(dllimport) ReturnType(__stdcall *__CQ_##FuncName##_T)(__VA_ARGS__);           \
     __CQ_##FuncName##_T CQ_##FuncName;                                                               \
     static bool __dummy_CQ_##FuncName = add_func_initializer([](auto dll) {                          \
         CQ_##FuncName = reinterpret_cast<__CQ_##FuncName##_T>(GetProcAddress(dll, "CQ_" #FuncName)); \
     });
+#else
+#define FUNC(ReturnType, FuncName, ...)                                                              \
+    typedef ReturnType(__stdcall *__CQ_##FuncName##_T)(__VA_ARGS__);           \
+    __CQ_##FuncName##_T CQ_##FuncName;                                                               \
+    static bool __dummy_CQ_##FuncName = add_func_initializer([](auto dll) {                          \
+        CQ_##FuncName = reinterpret_cast<__CQ_##FuncName##_T>(GetProcAddress(dll, "CQ_" #FuncName)); \
+    });
+#endif // defined(_MSC_VER)
+
 #include "./api_funcs.inc"
 #undef FUNC
     } // namespace raw
