@@ -2,8 +2,6 @@
  * 本文件用于定义 CQP.dll 提供的 API, 参数类型和参数名保持与酷Q原生一致.
  */
 
-using cq_bool_t = int32_t;
-
 // Message
 FUNC(int32_t, sendPrivateMsg, int32_t auth_code, int64_t qq, const char *msg)
 FUNC(int32_t, sendGroupMsg, int32_t auth_code, int64_t group_id, const char *msg)
