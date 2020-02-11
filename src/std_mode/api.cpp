@@ -17,7 +17,8 @@ using cq::utils::string_from_coolq;
 namespace cq {
 
     namespace raw {
-    using cq_bool_t = int32_t;
+        using cq_bool_t = int32_t;
+
 #define FUNC(ReturnType, FuncName, ...) static ReturnType(__stdcall *CQ_##FuncName)(__VA_ARGS__) = nullptr;
 #include "./api_funcs.inc"
 #undef FUNC
@@ -25,8 +26,9 @@ namespace cq {
 
     void _init_api() {
         const auto dll = GetModuleHandleW(L"CQP.dll");
-        using namespace raw;
-#define FUNC(ReturnType, FuncName, ...) CQ_##FuncName = reinterpret_cast<decltype(CQ_##FuncName)>(GetProcAddress(dll, "CQ_" #FuncName));
+
+#define FUNC(ReturnType, FuncName, ...) \
+    raw::CQ_##FuncName = reinterpret_cast<decltype(raw::CQ_##FuncName)>(GetProcAddress(dll, "CQ_" #FuncName));
 #include "./api_funcs.inc"
 #undef FUNC
     }
