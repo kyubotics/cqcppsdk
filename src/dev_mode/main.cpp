@@ -63,8 +63,8 @@ int main() {
     _setmode(_fileno(stdin), _O_WTEXT);
 #endif
 
-    cq::__init();
-    cq::__init_api();
+    cq::_init();
+    cq::_init_api();
 
     call_all(cq::_initialize_callbacks());
     call_all(cq::_coolq_start_callbacks());

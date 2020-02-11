@@ -9,16 +9,16 @@ namespace cq {
         Exception(const char *what_arg) : Exception(std::string(what_arg)) {
         }
 
-        Exception(const std::string &what_arg) : what_arg_(what_arg) {
+        Exception(const std::string &what_arg) : _what_arg(what_arg) {
         }
 
         // 异常描述
         const char *what() const noexcept override {
-            return what_arg_.c_str();
+            return _what_arg.c_str();
         }
 
     protected:
-        std::string what_arg_;
+        std::string _what_arg;
     };
 
     // 用户用法错误导致的异常
