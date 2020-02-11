@@ -2,14 +2,33 @@
 
 #include "./common.h"
 
+#include "../utils/string.h"
 #include "./api.h"
 
 namespace cq::message {
     // 对字符串做 CQ 码转义
-    std::string escape(const std::string &str, const bool escape_comma = true);
+    inline std::string escape(const std::string &str, const bool escape_comma = true) {
+        using cq::utils::string_replace;
+
+        std::string res = str;
+        string_replace(res, "&", "&amp;");
+        string_replace(res, "[", "&#91;");
+        string_replace(res, "]", "&#93;");
+        if (escape_comma) string_replace(res, ",", "&#44;");
+        return res;
+    }
 
     // 对字符串做 CQ 码去转义
-    std::string unescape(const std::string &str);
+    inline std::string unescape(const std::string &str) {
+        using cq::utils::string_replace;
+
+        std::string res = str;
+        string_replace(res, "&#44;", ",");
+        string_replace(res, "&#91;", "[");
+        string_replace(res, "&#93;", "]");
+        string_replace(res, "&amp;", "&");
+        return res;
+    }
 
     // 消息段 (即 CQ 码)
     struct MessageSegment {
@@ -147,11 +166,109 @@ namespace cq::message {
     };
 
     struct Message : std::list<MessageSegment> {
-        Message() = default;
+        using std::list<MessageSegment>::list;
+
+        // 将 C 字符串形式的消息转换为 Message 对象
+        Message(const char *msg_str) : Message(std::string(msg_str)) {
+        }
 
         // 将字符串形式的消息转换为 Message 对象
-        Message(const std::string &msg_str); // 实现在 cpp 文件
-        Message(const char *msg_str) : Message(std::string(msg_str)) {
+        Message(const std::string &msg_str) {
+            using cq::utils::string_trim;
+
+            // 定义字符流操作
+            size_t idx = 0;
+            const auto has_next = [&] { return idx < msg_str.length(); };
+            const auto next = [&] { return msg_str[idx++]; };
+            const auto move_rel = [&](const size_t rel_steps = 0) { idx += rel_steps; };
+            const auto peek = [&] { return msg_str[idx]; };
+            const auto peek_n = [&](const size_t count = 1) {
+                return msg_str.substr(idx, std::min(count, msg_str.length() - idx));
+            };
+
+            // 判断当前位置是否 CQ 码开头
+            const auto is_cq_code_begin = [&](const char ch) { return ch == '[' && peek_n(3) == "CQ:"; };
+
+            // 定义状态
+            static const auto S0 = 0;
+            static const auto S1 = 1;
+            auto state = S0;
+
+            std::string temp_text; // 暂存以后可能作为 text 类型消息段保存的内容
+            std::string cq_code; // 不包含 [CQ: 和 ] 的 CQ 码内容, 如 image,file=abc.jpg
+
+            const auto save_temp_text = [&] {
+                if (!temp_text.empty()) this->push_back(MessageSegment::text(unescape(temp_text)));
+                temp_text.clear();
+                cq_code.clear();
+            };
+
+            const auto save_cq_code = [&] {
+                std::istringstream iss(cq_code);
+                std::string type, param;
+                std::map<std::string, std::string> data;
+                getline(iss, type, ','); // 读取功能名
+                while (iss) {
+                    getline(iss, param, ','); // 读取一个参数
+                    string_trim(param);
+                    if (param.empty()) continue;
+                    const auto eq_pos = param.find('=');
+                    data.emplace(
+                        std::string(param.begin(), param.begin() + eq_pos),
+                        eq_pos != std::string::npos ? std::string(param.begin() + eq_pos + 1, param.end()) : "");
+                    param.clear();
+                }
+                this->push_back(MessageSegment{std::move(type), std::move(data)});
+                cq_code.clear();
+                temp_text.clear();
+            };
+
+            /*
+              状态图:
+                 +---+            +---+
+                 |   |            |   |
+                 | other          | other
+                 v   |            v   |
+              +--+-+ |         +--+-+ |      +----+
+              | S0 +-+--[CQ:-->+ S1 +-+--]-->+ SF |
+              +--+-+           +--+-+        +----+
+                 ^                |
+                 |                |
+                 +---[CQ:-back----+
+            */
+            while (has_next()) {
+                const auto ch = next();
+                switch (state) {
+                case S0: // 处理纯文本或 CQ 码开头
+                    if (is_cq_code_begin(ch)) {
+                        // 潜在的 CQ 码开始
+                        save_temp_text();
+                        temp_text += "[CQ:";
+                        move_rel(+3); // 跳过 CQ:
+                        state = S1;
+                    } else {
+                        temp_text += ch;
+                    }
+                    break;
+                case S1: // 处理 CQ 码内容
+                    if (is_cq_code_begin(ch)) {
+                        move_rel(-1); // 回退 [
+                        state = S0; // 回到 S0
+                    } else if (ch == ']') {
+                        // CQ 码结束
+                        save_cq_code();
+                        state = S0;
+                    } else {
+                        cq_code += ch;
+                        temp_text += ch;
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+            save_temp_text(); // 保存剩余的临时文本
+            this->reduce();
         }
 
         // 将消息段转换为 Message 对象
