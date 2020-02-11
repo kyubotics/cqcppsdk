@@ -47,7 +47,7 @@ __CQ_EVENT(int32_t, Initialize, 4)
     __ac = auth_code;
     __init();
     __init_api();
-    call_all_catch_all(cq::_initialize_callbacks);
+    call_all_catch_all(cq::_initialize_callbacks());
     return 0;
 }
 
@@ -56,7 +56,7 @@ __CQ_EVENT(int32_t, Initialize, 4)
  */
 __CQ_EVENT(int32_t, cq_event_enable, 0)
 () {
-    call_all_catch_all(cq::_enable_callbacks);
+    call_all_catch_all(cq::_enable_callbacks());
     return 0;
 }
 
@@ -65,7 +65,7 @@ __CQ_EVENT(int32_t, cq_event_enable, 0)
  */
 __CQ_EVENT(int32_t, cq_event_disable, 0)
 () {
-    call_all_catch_all(cq::_disable_callbacks);
+    call_all_catch_all(cq::_disable_callbacks());
     return 0;
 }
 
@@ -74,7 +74,7 @@ __CQ_EVENT(int32_t, cq_event_disable, 0)
  */
 __CQ_EVENT(int32_t, cq_event_coolq_start, 0)
 () {
-    call_all_catch_all(cq::_coolq_start_callbacks);
+    call_all_catch_all(cq::_coolq_start_callbacks());
     return 0;
 }
 
@@ -83,7 +83,7 @@ __CQ_EVENT(int32_t, cq_event_coolq_start, 0)
  */
 __CQ_EVENT(int32_t, cq_event_coolq_exit, 0)
 () {
-    call_all_catch_all(cq::_coolq_exit_callbacks);
+    call_all_catch_all(cq::_coolq_exit_callbacks());
     return 0;
 }
 
@@ -102,8 +102,8 @@ __CQ_EVENT(int32_t, cq_event_private_message, 24)
                                  string_from_coolq(msg),
                                  font,
                                  static_cast<PrivateMessageEvent::SubType>(sub_type));
-    call_all_catch_all(cq::_private_message_callbacks, e);
-    call_all_catch_all(cq::_message_callbacks, e);
+    call_all_catch_all(cq::_private_message_callbacks(), e);
+    call_all_catch_all(cq::_message_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -120,8 +120,8 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
     }
     auto e = GroupMessageEvent(
         from_qq, static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_group, std::move(anonymous));
-    call_all_catch_all(cq::_group_message_callbacks, e);
-    call_all_catch_all(cq::_message_callbacks, e);
+    call_all_catch_all(cq::_group_message_callbacks(), e);
+    call_all_catch_all(cq::_message_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -131,8 +131,8 @@ __CQ_EVENT(int32_t, cq_event_group_message, 36)
 __CQ_EVENT(int32_t, cq_event_discuss_message, 32)
 (int32_t sub_type, int32_t msg_id, int64_t from_discuss, int64_t from_qq, const char *msg, int32_t font) {
     auto e = DiscussMessageEvent(from_qq, static_cast<int64_t>(msg_id), string_from_coolq(msg), font, from_discuss);
-    call_all_catch_all(cq::_discuss_message_callbacks, e);
-    call_all_catch_all(cq::_message_callbacks, e);
+    call_all_catch_all(cq::_discuss_message_callbacks(), e);
+    call_all_catch_all(cq::_message_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -151,8 +151,8 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
     } catch (ParseError &) {
     }
     auto e = GroupUploadEvent(from_qq, from_group, std::move(file));
-    call_all_catch_all(cq::_group_upload_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_group_upload_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -163,8 +163,8 @@ __CQ_EVENT(int32_t, cq_event_group_upload, 28)
 __CQ_EVENT(int32_t, cq_event_group_admin, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t being_operate_qq) {
     auto e = GroupAdminEvent(being_operate_qq, from_group, static_cast<GroupAdminEvent::SubType>(sub_type));
-    call_all_catch_all(cq::_group_admin_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_group_admin_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -184,8 +184,8 @@ __CQ_EVENT(int32_t, cq_event_group_member_decrease, 32)
     if (e.sub_type == SubType::LEAVE) {
         e.operator_id = e.user_id; // 主动退群, 操作者是退群者自己
     }
-    call_all_catch_all(cq::_group_member_decrease_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_group_member_decrease_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -199,8 +199,8 @@ __CQ_EVENT(int32_t, cq_event_group_member_increase, 32)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq) {
     auto e = GroupMemberIncreaseEvent(
         being_operate_qq, from_group, from_qq, static_cast<GroupMemberIncreaseEvent::SubType>(sub_type));
-    call_all_catch_all(cq::_group_member_increase_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_group_member_increase_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -216,8 +216,8 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 (int32_t sub_type, int32_t send_time, int64_t from_group, int64_t from_qq, int64_t being_operate_qq, int64_t duration) {
     auto e =
         GroupBanEvent(being_operate_qq, from_group, from_qq, static_cast<GroupBanEvent::SubType>(sub_type), duration);
-    call_all_catch_all(cq::_group_ban_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_group_ban_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -227,8 +227,8 @@ __CQ_EVENT(int32_t, cq_event_group_ban, 40)
 __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 (int32_t sub_type, int32_t send_time, int64_t from_qq) {
     auto e = FriendAddEvent(from_qq);
-    call_all_catch_all(cq::_friend_add_callbacks, e);
-    call_all_catch_all(cq::_notice_callbacks, e);
+    call_all_catch_all(cq::_friend_add_callbacks(), e);
+    call_all_catch_all(cq::_notice_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -244,8 +244,8 @@ __CQ_EVENT(int32_t, cq_event_friend_add, 16)
 __CQ_EVENT(int32_t, cq_event_friend_request, 24)
 (int32_t sub_type, int32_t send_time, int64_t from_qq, const char *msg, const char *response_flag) {
     auto e = FriendRequestEvent(from_qq, string_from_coolq(msg), {string_from_coolq(response_flag)});
-    call_all_catch_all(cq::_friend_request_callbacks, e);
-    call_all_catch_all(cq::_request_callbacks, e);
+    call_all_catch_all(cq::_friend_request_callbacks(), e);
+    call_all_catch_all(cq::_request_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 
@@ -262,8 +262,8 @@ __CQ_EVENT(int32_t, cq_event_group_request, 32)
                                {string_from_coolq(response_flag)},
                                from_group,
                                static_cast<GroupRequestEvent::SubType>(sub_type));
-    call_all_catch_all(cq::_group_request_callbacks, e);
-    call_all_catch_all(cq::_request_callbacks, e);
+    call_all_catch_all(cq::_group_request_callbacks(), e);
+    call_all_catch_all(cq::_request_callbacks(), e);
     return static_cast<int32_t>(e.operation);
 }
 

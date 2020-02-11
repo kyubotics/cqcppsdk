@@ -32,14 +32,14 @@ static void process(string msg) {
 
     auto e =
         PrivateMessageEvent(FAKE_OTHER_USER_ID, ++message_id, std::move(msg), 0, PrivateMessageEvent::SubType::FRIEND);
-    call_all(cq::_private_message_callbacks, e);
-    call_all(cq::_message_callbacks, e);
+    call_all(cq::_private_message_callbacks(), e);
+    call_all(cq::_message_callbacks(), e);
 }
 
 static unsigned old_code_page;
 
 static void exit_callback() {
-    call_all(cq::_coolq_exit_callbacks);
+    call_all(cq::_coolq_exit_callbacks());
 
 #ifdef WIN32
     // 恢复控制台代码页
@@ -66,9 +66,9 @@ int main() {
     cq::__init();
     cq::__init_api();
 
-    call_all(cq::_initialize_callbacks);
-    call_all(cq::_coolq_start_callbacks);
-    call_all(cq::_enable_callbacks);
+    call_all(cq::_initialize_callbacks());
+    call_all(cq::_coolq_start_callbacks());
+    call_all(cq::_enable_callbacks());
 
     signal(SIGINT, sig_handler);
 
