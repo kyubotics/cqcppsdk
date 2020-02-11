@@ -15,7 +15,6 @@ using cq::utils::string_to_coolq;
 using cq::utils::string_from_coolq;
 
 namespace cq {
-
     namespace raw {
         using cq_bool_t = int32_t;
 
