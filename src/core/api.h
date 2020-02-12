@@ -9,7 +9,8 @@
 namespace cq {
     // API 调用失败
     struct ApiError : RuntimeError {
-        ApiError(const int code) : RuntimeError("failed to call coolq api"), code(code) {
+        ApiError(const int code)
+            : RuntimeError("failed to call coolq api, error code: " + std::to_string(code)), code(code) {
         }
 
         const int code; // 错误码
@@ -19,7 +20,7 @@ namespace cq {
         static const auto INVALID_ARGS = 102; // 参数无效
     };
 
-    void __init_api();
+    void _init_api();
 
     // 发送私聊消息
     int64_t send_private_message(const int64_t user_id, const std::string &message) noexcept(false);

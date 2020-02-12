@@ -15,17 +15,17 @@ using namespace std;
 namespace fs = filesystem;
 
 namespace cq {
-    void __init_api() {
+    void _init_api() {
     }
 
 #pragma region Message
 
     static int64_t message_id = 0;
 
-    template <typename... PairFirst, typename... PairSecond>
-    void print_api_call(const string &name, const pair<PairFirst, PairSecond> &... args) {
+    template <typename... Args>
+    void print_api_call(const string &name, const pair<const char *, Args> &... args) {
         cout << name << endl;
-        ((cout << "  " << to_string(args.first) << ": " << boolalpha << to_string(args.second) << endl), ...);
+        ((cout << "  " << string(args.first) << ": " << boolalpha << to_string(args.second) << endl), ...);
     }
 
     int64_t send_private_message(const int64_t user_id, const std::string &message) {
@@ -188,7 +188,7 @@ namespace cq {
 #pragma region CoolQ
 
     std::string get_cookies(const std::string &domain) {
-        print_api_call("get_cookies");
+        print_api_call("get_cookies", pair{"domain", domain});
         return "uin=" + to_string(FAKE_LOGIN_USER_ID);
     }
 
@@ -212,12 +212,12 @@ namespace cq {
     }
 
     std::string get_image(const std::string &file) {
-        print_api_call("get_image");
+        print_api_call("get_image", pair{"file", file});
         return "";
     }
 
     std::string get_record(const std::string &file, const std::string &out_format, const bool full_path) {
-        print_api_call("get_record");
+        print_api_call("get_record", pair{"file", file}, pair{"out_format", out_format}, pair{"full_path", full_path});
         return "";
     }
 

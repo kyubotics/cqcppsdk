@@ -2,10 +2,55 @@
 
 #include "./common.h"
 
-namespace cq::dir {
-    bool create_dir_if_not_exists(const std::string &dir);
+#include "../utils/string.h"
+#include "./api.h"
 
-    std::string root();
-    std::string app(const std::string &sub_dir_name = "");
-    std::string app_per_account(const std::string &sub_dir_name);
+namespace cq::dir {
+    namespace stdfs = std::filesystem;
+
+    inline bool create_dir_if_not_exists(const std::string &dir) {
+        const auto w_dir = cq::utils::s2ws(dir);
+        if (!stdfs::exists(w_dir)) {
+            return stdfs::create_directories(w_dir);
+        }
+        return true;
+    }
+
+    /**
+     * 获取酷Q主目录, 结尾保证是路径分隔符 ('/' 或 '\').
+     * 若目录不存在, 不会自动创建.
+     */
+    template <typename... S>
+    inline std::string root(const S &... sub_paths) {
+        auto p = stdfs::path(cq::get_coolq_root_directory());
+        (p.append(sub_paths), ...);
+        p /= ""; // ensure the trailing sep
+        return p.string();
+    }
+
+    /**
+     * 获取应用主目录, 结尾保证是路径分隔符 ('/' 或 '\').
+     * 若目录不存在, 会自动创建.
+     */
+    template <typename... S>
+    inline std::string app(const S &... sub_paths) {
+        auto p = stdfs::path(cq::get_app_directory());
+        (p.append(sub_paths), ...);
+        p /= ""; // ensure the trailing sep
+        create_dir_if_not_exists(p.string());
+        return p.string();
+    }
+
+    /**
+     * 获取应用的账号独立目录, 结尾保证是路径分隔符 ('/' 或 '\').
+     * 若目录不存在, 会自动创建.
+     */
+    template <typename... S>
+    inline std::string app_per_account(const S &... sub_paths) {
+        auto p = stdfs::path(app(std::to_string(cq::get_login_user_id())));
+        (p.append(sub_paths), ...);
+        p /= ""; // ensure the trailing sep
+        create_dir_if_not_exists(p.string());
+        return p.string();
+    }
 } // namespace cq::dir
