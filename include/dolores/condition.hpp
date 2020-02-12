@@ -277,9 +277,13 @@ namespace dolores {
                     state[STARTER] = matched_starter;
                     state[NAME] = candidate_name;
 
-                    const auto arg_beg_off = first_space + 1 - event.message.cbegin();
-                    state[ARGUMENT] =
-                        std::string_view(event.message.data() + arg_beg_off, event.message.length() - arg_beg_off);
+                    const auto arg_beg_off = first_space - event.message.cbegin() + 1;
+                    if (arg_beg_off < event.message.length()) {
+                        state[ARGUMENT] =
+                            std::string_view(event.message.data() + arg_beg_off, event.message.length() - arg_beg_off);
+                    } else {
+                        state[ARGUMENT] = std::string_view("");
+                    }
                 }
 
                 return res;
