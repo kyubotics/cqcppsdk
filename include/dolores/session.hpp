@@ -3,17 +3,25 @@
 #include <cqcppsdk/cqcppsdk.h>
 
 #include <memory>
+#include <string>
 #include <type_traits>
 
+#include "anymap.hpp"
+#include "condition.hpp"
 #include "traits.hpp"
 
 namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
     struct BaseSession {
         const E &event;
+        StrAnyMap state;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
         explicit BaseSession(const T &event) : event(event) {
+        }
+
+        template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
+        BaseSession(const T &event, StrAnyMap &&state) : event(event), state(std::move(state)) {
         }
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
@@ -33,6 +41,26 @@ namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
     struct Session : BaseSession<E> {
         using BaseSession<E>::BaseSession;
+    };
+
+    template <>
+    struct Session<cq::MessageEvent> : BaseSession<cq::MessageEvent> {
+        using BaseSession<cq::MessageEvent>::BaseSession;
+
+        std::string command_name() const {
+            if (state.count(cond::command::ARGUMENT) == 0) {
+                return "";
+            }
+            return std::any_cast<std::string>(state.at(cond::command::NAME));
+        }
+
+        std::string command_argument() const {
+            if (state.count(cond::command::ARGUMENT) == 0) {
+                return "";
+            }
+            const auto sv = std::any_cast<std::string_view>(state.at(cond::command::ARGUMENT));
+            return std::string(sv.cbegin(), sv.cend());
+        }
     };
 
     template <>

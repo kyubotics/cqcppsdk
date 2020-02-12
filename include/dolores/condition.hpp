@@ -6,10 +6,12 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+#include "anymap.hpp"
 #include "string.hpp"
 #include "traits.hpp"
 
@@ -30,109 +32,125 @@ namespace dolores {
         virtual bool operator()(const cq::UserEvent &event) const {
             return false;
         }
+
+        virtual bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        }
+
+        virtual bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        }
+
+        virtual bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        }
+
+        virtual bool operator()(const cq::UserEvent &event, StrAnyMap &state) const {
+            return operator()(event);
+        }
     };
 
     namespace cond {
-        struct AndExpr : Condition {
+        struct _And : Condition {
             std::shared_ptr<Condition> lhs;
             std::shared_ptr<Condition> rhs;
 
-            AndExpr(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
+            _And(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
                 : lhs(std::move(lhs)), rhs(std::move(rhs)) {
             }
 
             template <typename E>
-            bool __call__(const E &event) const {
-                return (*lhs)(event) && (*rhs)(event);
+            bool __call__(const E &event, StrAnyMap &state) const {
+                return (*lhs)(event, state) && (*rhs)(event, state);
             }
 
-            bool operator()(const cq::MessageEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::NoticeEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::RequestEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::UserEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
         };
 
-        struct OrExpr : Condition {
+        struct _Or : Condition {
             std::shared_ptr<Condition> lhs;
             std::shared_ptr<Condition> rhs;
 
-            OrExpr(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
+            _Or(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
                 : lhs(std::move(lhs)), rhs(std::move(rhs)) {
             }
 
             template <typename E>
-            bool __call__(const E &event) const {
-                return (*lhs)(event) || (*rhs)(event);
+            bool __call__(const E &event, StrAnyMap &state) const {
+                return (*lhs)(event, state) || (*rhs)(event, state);
             }
 
-            bool operator()(const cq::MessageEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::NoticeEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::RequestEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::UserEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
         };
 
         template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
-        inline AndExpr operator&(TL &&lhs, TR &&rhs) {
-            return AndExpr(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
-                           std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
+        inline _And operator&(TL &&lhs, TR &&rhs) {
+            return _And(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
+                        std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
         }
 
         template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
-        inline OrExpr operator|(TL &&lhs, TR &&rhs) {
-            return OrExpr(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
-                          std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
+        inline _Or operator|(TL &&lhs, TR &&rhs) {
+            return _Or(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
+                       std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
         }
 
-        struct All : Condition {
+        struct _All : Condition {
             std::vector<std::shared_ptr<Condition>> conditions;
 
             template <typename... Args>
-            explicit All(Args &&... args)
+            explicit _All(Args &&... args)
                 : conditions({std::make_shared<std::decay_t<Args>>(std::forward<Args>(args))...}) {
             }
 
             template <typename E>
-            bool __call__(const E &event) const {
+            bool __call__(const E &event, StrAnyMap &state) const {
                 return std::all_of(
-                    conditions.cbegin(), conditions.cend(), [&](const auto &cond) { return (*cond)(event); });
+                    conditions.cbegin(), conditions.cend(), [&](const auto &cond) { return (*cond)(event, state); });
             }
 
-            bool operator()(const cq::MessageEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::NoticeEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::RequestEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
 
-            bool operator()(const cq::UserEvent &event) const override {
-                return __call__(event);
+            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
             }
         };
 
@@ -190,6 +208,10 @@ namespace dolores {
         };
 
         struct command : Condition {
+            static constexpr const char *STARTER = "_cond__command__starter";
+            static constexpr const char *NAME = "_cond__command__name";
+            static constexpr const char *ARGUMENT = "_cond__command__argument";
+
             std::vector<std::string> names;
             std::vector<std::string> starters;
             std::vector<std::string> default_starters = {"/", "!", ".", "！", "。"};
@@ -202,7 +224,7 @@ namespace dolores {
                 : names(names), starters(std::move(starters)) {
             }
 
-            bool operator()(const cq::MessageEvent &event) const override {
+            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
                 bool starter_ok = false;
                 std::string matched_starter;
                 for (const auto &starter : (starters.empty() ? default_starters : starters)) {
@@ -217,7 +239,19 @@ namespace dolores {
                 const auto beg = event.message.cbegin() + matched_starter.length();
                 const auto end = event.message.cend();
                 const auto first_space = std::find_if(beg, end, cq::utils::isspace_s);
-                return std::find(names.cbegin(), names.cend(), std::string(beg, first_space)) != names.cend();
+                const auto candidate_name = std::string(beg, first_space);
+                const auto res = std::find(names.cbegin(), names.cend(), candidate_name) != names.cend();
+
+                if (res) {
+                    state[STARTER] = matched_starter;
+                    state[NAME] = candidate_name;
+
+                    const auto arg_beg_off = first_space + 1 - event.message.cbegin();
+                    state[ARGUMENT] =
+                        std::string_view(event.message.data() + arg_beg_off, event.message.length() - arg_beg_off);
+                }
+
+                return res;
             }
         };
 
