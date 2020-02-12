@@ -84,26 +84,26 @@ namespace dolores {
     }
 } // namespace dolores
 
-#define dolores_on_message(Name, ...)                                                                                  \
-    static void __dummy_message_handler_##Name(dolores::MessageSession &);                                             \
-    static const auto __dummy_message_handler_##Name##_res =                                                           \
-        dolores::add_handler(#Name,                                                                                    \
-                             std::make_shared<dolores::Handler<cq::MessageEvent>>(                                     \
-                                 __dummy_message_handler_##Name, std::make_shared<dolores::cond::_All>(__VA_ARGS__))); \
+#define dolores_on_message(Name, ...)                                                                                 \
+    static void __dummy_message_handler_##Name(dolores::MessageSession &);                                            \
+    static const auto __dummy_message_handler_##Name##_res =                                                          \
+        dolores::add_handler(#Name,                                                                                   \
+                             std::make_shared<dolores::Handler<cq::MessageEvent>>(                                    \
+                                 __dummy_message_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
     static void __dummy_message_handler_##Name(dolores::MessageSession &session)
 
-#define dolores_on_notice(Name, ...)                                                                                  \
-    static void __dummy_notice_handler_##Name(dolores::NoticeSession &);                                              \
-    static const auto __dummy_notice_handler_##Name##_res =                                                           \
-        dolores::add_handler(#Name,                                                                                   \
-                             std::make_shared<dolores::Handler<cq::NoticeEvent>>(                                     \
-                                 __dummy_notice_handler_##Name, std::make_shared<dolores::cond::_All>(__VA_ARGS__))); \
+#define dolores_on_notice(Name, ...)                                                                                 \
+    static void __dummy_notice_handler_##Name(dolores::NoticeSession &);                                             \
+    static const auto __dummy_notice_handler_##Name##_res =                                                          \
+        dolores::add_handler(#Name,                                                                                  \
+                             std::make_shared<dolores::Handler<cq::NoticeEvent>>(                                    \
+                                 __dummy_notice_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
     static void __dummy_notice_handler_##Name(dolores::NoticeSession &session)
 
-#define dolores_on_request(Name, ...)                                                                                  \
-    static void __dummy_request_handler_##Name(dolores::RequestSession &);                                             \
-    static const auto __dummy_request_handler_##Name##_res =                                                           \
-        dolores::add_handler(#Name,                                                                                    \
-                             std::make_shared<dolores::Handler<cq::RequestEvent>>(                                     \
-                                 __dummy_request_handler_##Name, std::make_shared<dolores::cond::_All>(__VA_ARGS__))); \
+#define dolores_on_request(Name, ...)                                                                                 \
+    static void __dummy_request_handler_##Name(dolores::RequestSession &);                                            \
+    static const auto __dummy_request_handler_##Name##_res =                                                          \
+        dolores::add_handler(#Name,                                                                                   \
+                             std::make_shared<dolores::Handler<cq::RequestEvent>>(                                    \
+                                 __dummy_request_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
     static void __dummy_request_handler_##Name(dolores::RequestSession &session)

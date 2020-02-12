@@ -51,12 +51,43 @@ namespace dolores {
     };
 
     namespace cond {
-        struct _And : Condition {
+        struct Not : Condition {
+            std::shared_ptr<Condition> condition;
+
+            template <typename T, typename = enable_if_is_condition_t<T>>
+            explicit Not(T &&condition) : condition(std::make_shared<std::decay_t<T>>(std::forward<T>(condition))) {
+            }
+
+            template <typename E>
+            bool __call__(const E &event, StrAnyMap &state) const {
+                return !(*condition)(event, state);
+            }
+
+            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
+            }
+
+            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
+            }
+
+            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
+            }
+
+            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
+                return __call__(event, state);
+            }
+        };
+
+        struct And : Condition {
             std::shared_ptr<Condition> lhs;
             std::shared_ptr<Condition> rhs;
 
-            _And(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
-                : lhs(std::move(lhs)), rhs(std::move(rhs)) {
+            template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
+            And(TL &&lhs, TR &&rhs)
+                : lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
+                  rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
             template <typename E>
@@ -81,12 +112,14 @@ namespace dolores {
             }
         };
 
-        struct _Or : Condition {
+        struct Or : Condition {
             std::shared_ptr<Condition> lhs;
             std::shared_ptr<Condition> rhs;
 
-            _Or(std::shared_ptr<Condition> lhs, std::shared_ptr<Condition> rhs)
-                : lhs(std::move(lhs)), rhs(std::move(rhs)) {
+            template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
+            Or(TL &&lhs, TR &&rhs)
+                : lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
+                  rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
             template <typename E>
@@ -112,22 +145,20 @@ namespace dolores {
         };
 
         template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
-        inline _And operator&(TL &&lhs, TR &&rhs) {
-            return _And(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
-                        std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
+        inline And operator&(TL &&lhs, TR &&rhs) {
+            return And(std::forward<TL>(lhs), std::forward<TR>(rhs));
         }
 
         template <typename TL, typename TR, typename = enable_if_is_condition_t<TL, TR>>
-        inline _Or operator|(TL &&lhs, TR &&rhs) {
-            return _Or(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs)),
-                       std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs)));
+        inline Or operator|(TL &&lhs, TR &&rhs) {
+            return Or(std::forward<TL>(lhs), std::forward<TR>(rhs));
         }
 
-        struct _All : Condition {
+        struct All : Condition {
             std::vector<std::shared_ptr<Condition>> conditions;
 
             template <typename... Args>
-            explicit _All(Args &&... args)
+            explicit All(Args &&... args)
                 : conditions({std::make_shared<std::decay_t<Args>>(std::forward<Args>(args))...}) {
             }
 

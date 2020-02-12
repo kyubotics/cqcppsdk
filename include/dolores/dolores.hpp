@@ -2,6 +2,7 @@
 
 #include <cqcppsdk/cqcppsdk.h>
 
+#include "anymap.hpp"
 #include "condition.hpp"
 #include "handler.hpp"
 #include "lifecycle.hpp"
