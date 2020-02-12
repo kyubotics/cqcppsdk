@@ -34,14 +34,14 @@ namespace cq {
         if (target.group_id.has_value()) {
             if (at_user && target.user_id.has_value()) {
                 return send_group_message(target.group_id.value(),
-                                          "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+                                          "[CQ:at,qq=" + to_string(target.user_id.value()) + "] " + message);
             }
             return send_group_message(target.group_id.value(), message);
         }
         if (target.discuss_id.has_value()) {
             if (at_user && target.user_id.has_value()) {
                 return send_discuss_message(target.discuss_id.value(),
-                                            "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+                                            "[CQ:at,qq=" + to_string(target.user_id.value()) + "] " + message);
             }
             return send_discuss_message(target.discuss_id.value(), message);
         }

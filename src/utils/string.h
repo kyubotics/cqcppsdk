@@ -76,12 +76,13 @@ namespace cq::utils {
     }
 } // namespace cq::utils
 
-namespace std {
-    inline string to_string(const string &val) {
+namespace cq {
+    using std::to_string;
+    inline std::string to_string(const std::string &val) {
         return val;
     }
 
-    inline string to_string(const bool val) {
+    inline std::string to_string(const bool val) {
         return val ? "true" : "false";
     }
 } // namespace std
