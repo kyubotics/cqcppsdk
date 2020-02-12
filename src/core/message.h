@@ -378,9 +378,3 @@ namespace cq::message {
         return std::string(lhs) == std::string(rhs);
     }
 } // namespace cq::message
-
-namespace std {
-    inline string to_string(const cq::message::Message &msg) {
-        return string(msg);
-    }
-} // namespace std
