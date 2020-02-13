@@ -12,7 +12,7 @@
 #include "./mock.h"
 
 using namespace std;
-namespace fs = filesystem;
+namespace fs = cq::dir::stdfs;
 
 namespace cq {
     void _init_api() {

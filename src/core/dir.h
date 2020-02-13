@@ -5,8 +5,18 @@
 #include "../utils/string.h"
 #include "./api.h"
 
+#ifndef BOOST_FILESYSTEM_AVAILABLE
+#include <filesystem>
+#else
+#include <boost/filesystem.hpp>
+#endif
+
 namespace cq::dir {
+#ifndef BOOST_FILESYSTEM_AVAILABLE
     namespace stdfs = std::filesystem;
+#else
+    namespace stdfs = boost::filesystem;
+#endif
 
     inline bool create_dir_if_not_exists(const std::string &dir) {
         const auto w_dir = cq::utils::s2ws(dir);
