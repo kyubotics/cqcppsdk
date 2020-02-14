@@ -11,12 +11,11 @@
 #include "../core/init.h"
 #include "../core/logging.h"
 #include "../utils/function.h"
-#include "../utils/string.h"
 
-using namespace std;
 using namespace cq;
-using utils::call_if_valid;
-using utils::string_from_coolq;
+using std::string;
+using cq::utils::call_if_valid;
+using cq::utils::string_from_coolq;
 
 template <typename Cont, typename... Args>
 inline void call_all_catch_all(const Cont &funcs, Args &&... args) {

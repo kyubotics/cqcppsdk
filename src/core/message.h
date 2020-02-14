@@ -2,7 +2,6 @@
 
 #include "./common.h"
 
-#include "../utils/string.h"
 #include "./api.h"
 
 namespace cq::message {
@@ -190,9 +189,7 @@ namespace cq::message {
             const auto is_cq_code_begin = [&](const char ch) { return ch == '[' && peek_n(3) == "CQ:"; };
 
             // 定义状态
-            static const auto S0 = 0;
-            static const auto S1 = 1;
-            auto state = S0;
+            enum { S0, S1 } state = S0;
 
             std::string temp_text; // 暂存以后可能作为 text 类型消息段保存的内容
             std::string cq_code; // 不包含 [CQ: 和 ] 的 CQ 码内容, 如 image,file=abc.jpg
@@ -262,8 +259,6 @@ namespace cq::message {
                         cq_code += ch;
                         temp_text += ch;
                     }
-                    break;
-                default:
                     break;
                 }
             }

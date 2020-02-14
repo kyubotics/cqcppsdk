@@ -8,9 +8,10 @@
 #include <Windows.h>
 
 #include "../core/init.h"
-#include "../utils/string.h"
 
-using namespace std;
+using std::enable_if_t;
+using std::is_integral_v;
+using std::is_pointer_v;
 using cq::utils::string_to_coolq;
 using cq::utils::string_from_coolq;
 
@@ -131,7 +132,6 @@ namespace cq {
 
     void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason) {
-        int32_t sub_type_i = 0;
         chk(raw::CQ_setGroupAddRequestV2(_ac,
                                          string_to_coolq(flag).c_str(),
                                          static_cast<int32_t>(sub_type),
@@ -222,7 +222,7 @@ namespace cq {
         wchar_t w_exec_path[size]{};
         GetModuleFileNameW(nullptr, w_exec_path, size); // 此调用可获取到 "C:\\Path\\To\\CQ\\CQA.exe"
         auto exec_path = utils::ws2s(w_exec_path);
-        return exec_path.substr(0, exec_path.rfind("\\")) + "\\";
+        return exec_path.substr(0, exec_path.rfind('\\')) + '\\';
     }
 
     std::string get_image(const std::string &file) {

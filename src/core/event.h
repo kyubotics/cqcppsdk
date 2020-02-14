@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./common.h"
+
 #include "./target.h"
 #include "./type.h"
 
@@ -311,7 +312,9 @@ namespace cq {
               sub_type(sub_type) {
         }
     };
+} // namespace cq
 
+namespace cq {
     inline std::string to_string(cq::UserEvent::Type type) {
         using Type = cq::UserEvent::Type;
         switch (type) {

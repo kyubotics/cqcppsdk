@@ -79,15 +79,13 @@ namespace cq::utils {
 namespace cq {
     using std::to_string;
 
-    template <class T>
-    inline auto to_string(T &&val) ->
-        typename std::enable_if<std::is_convertible<T &&, std::string>::value, std::string>::type {
+    template <class T, typename = std::enable_if_t<std::is_convertible_v<T &&, std::string>>>
+    inline auto to_string(T &&val) {
         return static_cast<std::string>(std::forward<T>(val));
     }
 
-    template <class T>
-    inline auto to_string(T val) ->
-        typename std::enable_if<std::is_same<typename std::decay<T>::type, bool>::value, std::string>::type {
+    template <class T, typename = std::enable_if_t<std::is_same_v<typename std::decay<T>::type, bool>, std::string>>
+    inline auto to_string(T val) {
         return val ? "true" : "false";
     }
 } // namespace cq

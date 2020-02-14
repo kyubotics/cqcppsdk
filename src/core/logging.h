@@ -1,6 +1,5 @@
 #include "./common.h"
 
-#include "../utils/string.h"
 #include "./api.h"
 
 namespace cq::logging {
