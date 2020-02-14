@@ -50,7 +50,7 @@ namespace cq {
 
     // 用户信息
     struct User {
-        int64_t user_id = 0; // 用户 Id (QQ 号)
+        int64_t user_id = 0; // 用户 ID (QQ 号)
         std::string nickname; // 昵称
         Sex sex = Sex::UNKNOWN; // 性别
         int32_t age = 0; // 年龄
@@ -187,7 +187,7 @@ namespace cq {
 
     // 匿名信息
     struct Anonymous {
-        int64_t id = 0; // Id, 具体含义不明
+        int64_t id = 0; // ID, 具体含义不明
         std::string name; // 匿名昵称
         std::string token; // 一串二进制数据, 具体含义不明
         std::string base64; // 整个 Anonymous 对象的 Base64 编码字符串
@@ -221,10 +221,10 @@ namespace cq {
 
     // 文件信息
     struct File {
-        std::string id; // Id
+        std::string id; // ID
         std::string name; // 名称
         int64_t size = 0; // 大小(字节)
-        int64_t busid = 0; // 某种 Id, 具体含义不明
+        int64_t busid = 0; // 某种 ID, 具体含义不明
 
     private:
         const static size_t MIN_SIZE = 20;

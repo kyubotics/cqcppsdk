@@ -32,7 +32,7 @@ inline void call_all_catch_all(const Cont &funcs, Args &&... args) {
 #pragma region Lifecycle
 
 /**
- * 返回 API 版本和 App Id.
+ * 返回 API 版本和 App ID.
  */
 _CQ_EVENT(const char *, AppInfo, 0)
 () {

@@ -89,7 +89,7 @@ namespace cq {
     void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason = "") noexcept(false);
 
-    // 获取登录号 Id (QQ 号)
+    // 获取登录号 ID (QQ 号)
     int64_t get_login_user_id() noexcept(false);
     // 获取登录号昵称
     std::string get_login_nickname() noexcept(false);
