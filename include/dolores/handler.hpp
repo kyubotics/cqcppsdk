@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "condition.hpp"
-#include "session.hpp"
+#include "current.hpp"
 #include "string.hpp"
 #include "traits.hpp"
 
@@ -16,7 +16,7 @@ namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
     class Handler {
     public:
-        explicit Handler(std::function<void(Session<E> &session)> impl, std::shared_ptr<Condition> condition = nullptr)
+        explicit Handler(std::function<void(Current<E> &current)> impl, std::shared_ptr<Condition> condition = nullptr)
             : _impl(std::move(impl)), _condition(std::move(condition)) {
         }
 
@@ -25,14 +25,14 @@ namespace dolores {
             return (*_condition)(event, state);
         }
 
-        void run(Session<E> &session) const {
+        void run(Current<E> &current) const {
             if (!_impl) return;
-            _impl(session);
+            _impl(current);
         }
 
     private:
         std::shared_ptr<Condition> _condition;
-        std::function<void(Session<E> &session)> _impl;
+        std::function<void(Current<E> &current)> _impl;
     };
 
     struct _HandlerMapWrapper {
@@ -70,14 +70,14 @@ namespace dolores {
             StrAnyMap state;
             if (handler->check_condition(event, state)) {
                 if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
-                    MessageSession session(event, std::move(state));
-                    handler->run(session);
+                    Current<cq::MessageEvent> current(event, std::move(state));
+                    handler->run(current);
                 } else if constexpr (std::is_base_of_v<cq::NoticeEvent, E>) {
-                    NoticeSession session(event, std::move(state));
-                    handler->run(session);
+                    Current<cq::NoticeEvent> current(event, std::move(state));
+                    handler->run(current);
                 } else { // std::is_base_of_v<cq::RequestEvent, E>
-                    RequestSession session(event, std::move(state));
-                    handler->run(session);
+                    Current<cq::RequestEvent> current(event, std::move(state));
+                    handler->run(current);
                 }
             }
         }
@@ -85,25 +85,25 @@ namespace dolores {
 } // namespace dolores
 
 #define dolores_on_message(Name, ...)                                                                                 \
-    static void __dummy_message_handler_##Name(dolores::MessageSession &);                                            \
+    static void __dummy_message_handler_##Name(dolores::Current<cq::MessageEvent> &);                                 \
     static const auto __dummy_message_handler_##Name##_res =                                                          \
         dolores::add_handler(#Name,                                                                                   \
                              std::make_shared<dolores::Handler<cq::MessageEvent>>(                                    \
                                  __dummy_message_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
-    static void __dummy_message_handler_##Name(dolores::MessageSession &session)
+    static void __dummy_message_handler_##Name(dolores::Current<cq::MessageEvent> &current)
 
 #define dolores_on_notice(Name, ...)                                                                                 \
-    static void __dummy_notice_handler_##Name(dolores::NoticeSession &);                                             \
+    static void __dummy_notice_handler_##Name(dolores::Current<cq::NoticeEvent> &);                                  \
     static const auto __dummy_notice_handler_##Name##_res =                                                          \
         dolores::add_handler(#Name,                                                                                  \
                              std::make_shared<dolores::Handler<cq::NoticeEvent>>(                                    \
                                  __dummy_notice_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
-    static void __dummy_notice_handler_##Name(dolores::NoticeSession &session)
+    static void __dummy_notice_handler_##Name(dolores::Current<cq::NoticeEvent> &current)
 
 #define dolores_on_request(Name, ...)                                                                                 \
-    static void __dummy_request_handler_##Name(dolores::RequestSession &);                                            \
+    static void __dummy_request_handler_##Name(dolores::Current<cq::RequestEvent> &);                                 \
     static const auto __dummy_request_handler_##Name##_res =                                                          \
         dolores::add_handler(#Name,                                                                                   \
                              std::make_shared<dolores::Handler<cq::RequestEvent>>(                                    \
                                  __dummy_request_handler_##Name, std::make_shared<dolores::cond::All>(__VA_ARGS__))); \
-    static void __dummy_request_handler_##Name(dolores::RequestSession &session)
+    static void __dummy_request_handler_##Name(dolores::Current<cq::RequestEvent> &current)

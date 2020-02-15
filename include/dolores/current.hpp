@@ -12,17 +12,19 @@
 
 namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
-    struct BaseSession {
+    struct BaseCurrent {
         const E &event;
         StrAnyMap state;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        explicit BaseSession(const T &event) : event(event) {
+        explicit BaseCurrent(const T &event) : event(event) {
         }
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        BaseSession(const T &event, StrAnyMap &&state) : event(event), state(std::move(state)) {
+        BaseCurrent(const T &event, StrAnyMap &&state) : event(event), state(std::move(state)) {
         }
+
+        virtual ~BaseCurrent() = default;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
         auto event_as() const {
@@ -39,13 +41,13 @@ namespace dolores {
     };
 
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
-    struct Session : BaseSession<E> {
-        using BaseSession<E>::BaseSession;
+    struct Current : BaseCurrent<E> {
+        using BaseCurrent<E>::BaseCurrent;
     };
 
     template <>
-    struct Session<cq::MessageEvent> : BaseSession<cq::MessageEvent> {
-        using BaseSession<cq::MessageEvent>::BaseSession;
+    struct Current<cq::MessageEvent> : BaseCurrent<cq::MessageEvent> {
+        using BaseCurrent<cq::MessageEvent>::BaseCurrent;
 
         std::string command_name() const {
             if (state.count(cond::command::ARGUMENT) == 0) {
@@ -64,8 +66,8 @@ namespace dolores {
     };
 
     template <>
-    struct Session<cq::RequestEvent> : BaseSession<cq::RequestEvent> {
-        using BaseSession<cq::RequestEvent>::BaseSession;
+    struct Current<cq::RequestEvent> : BaseCurrent<cq::RequestEvent> {
+        using BaseCurrent<cq::RequestEvent>::BaseCurrent;
 
         void approve() const {
             _set_request(true);
@@ -95,8 +97,4 @@ namespace dolores {
             }
         }
     };
-
-    using MessageSession = Session<cq::MessageEvent>;
-    using NoticeSession = Session<cq::NoticeEvent>;
-    using RequestSession = Session<cq::RequestEvent>;
 } // namespace dolores
