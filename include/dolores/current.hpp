@@ -6,7 +6,7 @@
 #include <string>
 #include <type_traits>
 
-#include "condition.hpp"
+#include "matcher.hpp"
 #include "session.hpp"
 #include "traits.hpp"
 
@@ -50,17 +50,17 @@ namespace dolores {
         using BaseCurrent<cq::MessageEvent>::BaseCurrent;
 
         std::string command_name() const {
-            if (session.count(cond::command::ARGUMENT) == 0) {
+            if (session.count(matchers::command::ARGUMENT) == 0) {
                 return "";
             }
-            return std::any_cast<std::string>(session.at(cond::command::NAME));
+            return std::any_cast<std::string>(session.at(matchers::command::NAME));
         }
 
         std::string command_argument() const {
-            if (session.count(cond::command::ARGUMENT) == 0) {
+            if (session.count(matchers::command::ARGUMENT) == 0) {
                 return "";
             }
-            const auto sv = std::any_cast<std::string_view>(session.at(cond::command::ARGUMENT));
+            const auto sv = std::any_cast<std::string_view>(session.at(matchers::command::ARGUMENT));
             return std::string(sv.cbegin(), sv.cend());
         }
     };

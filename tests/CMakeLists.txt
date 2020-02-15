@@ -9,4 +9,4 @@ cq_add_test(test_dolores
         test_dolores.cpp
         test_dolores_session.cpp
         test_dolores_string.cpp
-        test_dolores_condition.cpp)
+        test_dolores_matcher.cpp)
