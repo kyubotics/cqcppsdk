@@ -12,19 +12,19 @@
 
 namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
-    struct BaseCurrent {
+    struct CurrentBase {
         const E &event;
         Session &session;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        explicit BaseCurrent(const T &event) : event(event) {
+        explicit CurrentBase(const T &event) : event(event) {
         }
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        BaseCurrent(const T &event, Session &session) : event(event), session(session) {
+        CurrentBase(const T &event, Session &session) : event(event), session(session) {
         }
 
-        virtual ~BaseCurrent() = default;
+        virtual ~CurrentBase() = default;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
         auto event_as() const {
@@ -41,13 +41,13 @@ namespace dolores {
     };
 
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
-    struct Current : BaseCurrent<E> {
-        using BaseCurrent<E>::BaseCurrent;
+    struct Current : CurrentBase<E> {
+        using CurrentBase<E>::CurrentBase;
     };
 
     template <>
-    struct Current<cq::MessageEvent> : BaseCurrent<cq::MessageEvent> {
-        using BaseCurrent<cq::MessageEvent>::BaseCurrent;
+    struct Current<cq::MessageEvent> : CurrentBase<cq::MessageEvent> {
+        using CurrentBase<cq::MessageEvent>::CurrentBase;
 
         std::string command_name() const {
             if (session.count(matchers::command::ARGUMENT) == 0) {
@@ -66,8 +66,8 @@ namespace dolores {
     };
 
     template <>
-    struct Current<cq::RequestEvent> : BaseCurrent<cq::RequestEvent> {
-        using BaseCurrent<cq::RequestEvent>::BaseCurrent;
+    struct Current<cq::RequestEvent> : CurrentBase<cq::RequestEvent> {
+        using CurrentBase<cq::RequestEvent>::CurrentBase;
 
         void approve() const {
             _set_request(true);
