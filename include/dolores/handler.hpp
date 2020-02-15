@@ -13,7 +13,7 @@
 #include "traits.hpp"
 
 namespace dolores {
-    template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     class Handler {
     public:
         explicit Handler(std::function<void(Current<E> &current)> impl, std::shared_ptr<MatcherBase> matcher = nullptr)
@@ -36,10 +36,10 @@ namespace dolores {
     };
 
     struct _HandlerMapWrapper {
-        template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+        template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
         using HandlerMap = std::map<std::string, std::shared_ptr<Handler<E>>>;
 
-        template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+        template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
         static auto &handlers() {
             if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
                 static HandlerMap<cq::MessageEvent> message_handlers;
@@ -54,14 +54,14 @@ namespace dolores {
         }
     };
 
-    template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     inline bool add_handler(const std::string &name, const std::shared_ptr<Handler<E>> &handler) {
         auto &handlers = _HandlerMapWrapper::handlers<E>();
         handlers[name] = handler;
         return true;
     }
 
-    template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     inline void run_handlers(const E &event) {
         const auto &handlers = _HandlerMapWrapper::handlers<E>();
         for (const auto &[name, handler] : handlers) {
@@ -89,7 +89,7 @@ namespace dolores {
     static const auto __dummy_message_handler_##Name##_res = dolores::add_handler(                                    \
         #Name,                                                                                                        \
         std::make_shared<dolores::Handler<cq::MessageEvent>>(__dummy_message_handler_##Name,                          \
-                                                             std::make_shared<dolores::matchers::All>(__VA_ARGS__))); \
+                                                             std::make_shared<dolores::matchers::all>(__VA_ARGS__))); \
     static void __dummy_message_handler_##Name(dolores::Current<cq::MessageEvent> &current)
 
 #define dolores_on_notice(Name, ...)                                                                                 \
@@ -97,7 +97,7 @@ namespace dolores {
     static const auto __dummy_notice_handler_##Name##_res = dolores::add_handler(                                    \
         #Name,                                                                                                       \
         std::make_shared<dolores::Handler<cq::NoticeEvent>>(__dummy_notice_handler_##Name,                           \
-                                                            std::make_shared<dolores::matchers::All>(__VA_ARGS__))); \
+                                                            std::make_shared<dolores::matchers::all>(__VA_ARGS__))); \
     static void __dummy_notice_handler_##Name(dolores::Current<cq::NoticeEvent> &current)
 
 #define dolores_on_request(Name, ...)                                                                                 \
@@ -105,5 +105,5 @@ namespace dolores {
     static const auto __dummy_request_handler_##Name##_res = dolores::add_handler(                                    \
         #Name,                                                                                                        \
         std::make_shared<dolores::Handler<cq::RequestEvent>>(__dummy_request_handler_##Name,                          \
-                                                             std::make_shared<dolores::matchers::All>(__VA_ARGS__))); \
+                                                             std::make_shared<dolores::matchers::all>(__VA_ARGS__))); \
     static void __dummy_request_handler_##Name(dolores::Current<cq::RequestEvent> &current)

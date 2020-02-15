@@ -20,6 +20,6 @@ TEST_CASE("Session", "[session]") {
     REQUIRE_THROWS_AS(m.get<float>("bar"), std::bad_any_cast);
 
     REQUIRE_NOTHROW(m.get<int>("bad bar", 0));
-    REQUIRE_NOTHROW(m.get<float>("bar", 0));
+    REQUIRE_NOTHROW(m.get<float>("bar", 0.0f));
     REQUIRE(m.get<int>("bad bar", 0) == 0);
 }

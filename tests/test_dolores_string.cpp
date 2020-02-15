@@ -40,3 +40,12 @@ TEST_CASE("string::contains", "[string]") {
     REQUIRE(!string::contains(s, "foo"));
     REQUIRE(string::contains(s, std::string()));
 }
+
+TEST_CASE("string::string_view_from", "[string]") {
+    using namespace dolores;
+
+    std::string s = "foo";
+    REQUIRE(string::string_view_from(s.cbegin(), s.cend()) == "foo");
+    REQUIRE(string::string_view_from(s.cbegin() + 1, s.cend()) == "oo");
+    REQUIRE(string::string_view_from(s.cend(), s.cend()) == "");
+}

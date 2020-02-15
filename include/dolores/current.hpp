@@ -11,7 +11,7 @@
 #include "traits.hpp"
 
 namespace dolores {
-    template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     struct CurrentBase {
         const E &event;
         Session &session;
@@ -40,7 +40,7 @@ namespace dolores {
         }
     };
 
-    template <typename E, typename = enable_if_derived_from_user_event_t<E>>
+    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     struct Current : CurrentBase<E> {
         using CurrentBase<E>::CurrentBase;
     };
@@ -49,19 +49,16 @@ namespace dolores {
     struct Current<cq::MessageEvent> : CurrentBase<cq::MessageEvent> {
         using CurrentBase<cq::MessageEvent>::CurrentBase;
 
+        std::string command_starter() const {
+            return std::string(session.get<std::string_view>(matchers::command::STARTER, ""));
+        }
+
         std::string command_name() const {
-            if (session.count(matchers::command::ARGUMENT) == 0) {
-                return "";
-            }
-            return std::any_cast<std::string>(session.at(matchers::command::NAME));
+            return std::string(session.get<std::string_view>(matchers::command::NAME, ""));
         }
 
         std::string command_argument() const {
-            if (session.count(matchers::command::ARGUMENT) == 0) {
-                return "";
-            }
-            const auto sv = std::any_cast<std::string_view>(session.at(matchers::command::ARGUMENT));
-            return std::string(sv.cbegin(), sv.cend());
+            return std::string(session.get<std::string_view>(matchers::command::ARGUMENT, ""));
         }
     };
 

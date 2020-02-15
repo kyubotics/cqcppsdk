@@ -1,18 +1,25 @@
 #pragma once
 
-#include <string>
+#include <string_view>
 
 namespace dolores::string {
-    inline bool startswith(const std::string &s, const std::string &prefix) {
-        return s.substr(0, prefix.length()) == prefix;
+    inline bool startswith(const std::string_view &sv, const std::string_view &prefix) {
+        return sv.substr(0, prefix.length()) == prefix;
     }
 
-    inline bool endswith(const std::string &s, const std::string &suffix) {
-        if (s.length() < suffix.length()) return false;
-        return s.substr(s.length() - suffix.length()) == suffix;
+    inline bool endswith(const std::string_view &sv, const std::string_view &suffix) {
+        if (sv.length() < suffix.length()) return false;
+        return sv.substr(sv.length() - suffix.length()) == suffix;
     }
 
-    inline bool contains(const std::string &s, const std::string &sub) {
-        return s.find(sub) != std::string::npos;
+    inline bool contains(const std::string_view &sv, const std::string_view &sub) {
+        return sv.find(sub) != std::string_view ::npos;
+    }
+
+    template <class It, class End>
+    inline std::string_view string_view_from(It first, End last) {
+        const auto size = last - first;
+        if (size <= 0) return std::string_view("");
+        return std::string_view(&*first, size);
     }
 } // namespace dolores::string
