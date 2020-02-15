@@ -151,13 +151,18 @@ namespace dolores {
             }
         };
 
+        template <typename T, typename = enable_if_is_matcher_t<T>>
+        inline Not operator!(T &&matcher) {
+            return Not(std::forward<T>(matcher));
+        }
+
         template <typename TL, typename TR, typename = enable_if_is_matcher_t<TL, TR>>
-        inline And operator&(TL &&lhs, TR &&rhs) {
+        inline And operator&&(TL &&lhs, TR &&rhs) {
             return And(std::forward<TL>(lhs), std::forward<TR>(rhs));
         }
 
         template <typename TL, typename TR, typename = enable_if_is_matcher_t<TL, TR>>
-        inline Or operator|(TL &&lhs, TR &&rhs) {
+        inline Or operator||(TL &&lhs, TR &&rhs) {
             return Or(std::forward<TL>(lhs), std::forward<TR>(rhs));
         }
 
@@ -294,7 +299,7 @@ namespace dolores {
                     session[STARTER] = matched_starter;
                     session[NAME] = candidate_name;
 
-                    const auto arg_beg_off = first_space - event.message.cbegin() + 1;
+                    const auto arg_beg_off = static_cast<size_t>(first_space - event.message.cbegin() + 1);
                     if (arg_beg_off < event.message.length()) {
                         session[ARGUMENT] =
                             std::string_view(event.message.data() + arg_beg_off, event.message.length() - arg_beg_off);

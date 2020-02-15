@@ -19,20 +19,21 @@ TEST_CASE("matchers::Not", "[condition]") {
     auto [event, session] = construct();
     REQUIRE_FALSE(to_cond(Not(contains("ll")))->match(event, session));
     REQUIRE(to_cond(Not(contains("foo")))->match(event, session));
+    REQUIRE(to_cond(!contains("foo"))->match(event, session));
 }
 
 TEST_CASE("matchers::And", "[condition]") {
     auto [event, session] = construct();
     REQUIRE(to_cond(And(contains("ll"), contains("wor")))->match(event, session));
-    REQUIRE(to_cond((contains("ll") & contains("wor")))->match(event, session));
-    REQUIRE_FALSE(to_cond((contains("foo") & contains("wor")))->match(event, session));
+    REQUIRE(to_cond((contains("ll") && contains("wor")))->match(event, session));
+    REQUIRE_FALSE(to_cond((contains("foo") && contains("wor")))->match(event, session));
 }
 
 TEST_CASE("matchers::Or", "[condition]") {
     auto [event, session] = construct();
-    REQUIRE(to_cond(And(contains("ll"), contains("wor")))->match(event, session));
-    REQUIRE(to_cond((contains("ll") & contains("wor")))->match(event, session));
-    REQUIRE_FALSE(to_cond((contains("foo") & contains("wor")))->match(event, session));
+    REQUIRE(to_cond(Or(contains("ll"), contains("wor")))->match(event, session));
+    REQUIRE(to_cond((contains("ll") || contains("foo")))->match(event, session));
+    REQUIRE_FALSE(to_cond((contains("foo") || contains("bar")))->match(event, session));
 }
 
 TEST_CASE("matchers::All", "[condition]") {
