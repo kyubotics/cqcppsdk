@@ -68,7 +68,7 @@ namespace dolores {
             if (string::startswith(name, "_")) continue;
 
             Session session;
-            if (handler->check_condition(event, session)) {
+            if (handler->match_condition(event, session)) {
                 if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
                     Current<cq::MessageEvent> current(event, session);
                     handler->run(current);
