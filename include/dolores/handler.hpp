@@ -20,7 +20,7 @@ namespace dolores {
             : _impl(std::move(impl)), _condition(std::move(condition)) {
         }
 
-        bool check_condition(const E &event, StrAnyMap &state) const {
+        bool check_condition(const E &event, Session &state) const {
             if (!_condition) return true;
             return (*_condition)(event, state);
         }
@@ -67,16 +67,16 @@ namespace dolores {
         for (const auto &[name, handler] : handlers) {
             if (string::startswith(name, "_")) continue;
 
-            StrAnyMap state;
-            if (handler->check_condition(event, state)) {
+            Session session;
+            if (handler->check_condition(event, session)) {
                 if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
-                    Current<cq::MessageEvent> current(event, std::move(state));
+                    Current<cq::MessageEvent> current(event, session);
                     handler->run(current);
                 } else if constexpr (std::is_base_of_v<cq::NoticeEvent, E>) {
-                    Current<cq::NoticeEvent> current(event, std::move(state));
+                    Current<cq::NoticeEvent> current(event, session);
                     handler->run(current);
                 } else { // std::is_base_of_v<cq::RequestEvent, E>
-                    Current<cq::RequestEvent> current(event, std::move(state));
+                    Current<cq::RequestEvent> current(event, session);
                     handler->run(current);
                 }
             }

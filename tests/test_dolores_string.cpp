@@ -1,5 +1,6 @@
-#include "catch.hpp"
 #include "dolores/string.hpp"
+
+#include "catch.hpp"
 
 TEST_CASE("string::startswith", "[string]") {
     using namespace dolores;

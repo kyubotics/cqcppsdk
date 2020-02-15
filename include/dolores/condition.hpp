@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "anymap.hpp"
+#include "session.hpp"
 #include "string.hpp"
 #include "traits.hpp"
 
@@ -33,19 +33,19 @@ namespace dolores {
             return false;
         }
 
-        virtual bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const {
-            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        virtual bool operator()(const cq::MessageEvent &event, Session &session) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), session);
         }
 
-        virtual bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const {
-            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        virtual bool operator()(const cq::NoticeEvent &event, Session &session) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), session);
         }
 
-        virtual bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const {
-            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), state);
+        virtual bool operator()(const cq::RequestEvent &event, Session &session) const {
+            return operator()(event) || operator()(static_cast<const cq::UserEvent &>(event), session);
         }
 
-        virtual bool operator()(const cq::UserEvent &event, StrAnyMap &state) const {
+        virtual bool operator()(const cq::UserEvent &event, Session &session) const {
             return operator()(event);
         }
     };
@@ -59,24 +59,24 @@ namespace dolores {
             }
 
             template <typename E>
-            bool __call__(const E &event, StrAnyMap &state) const {
-                return !(*condition)(event, state);
+            bool __call__(const E &event, Session &session) const {
+                return !(*condition)(event, session);
             }
 
-            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::MessageEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::NoticeEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::RequestEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::UserEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
         };
 
@@ -91,24 +91,24 @@ namespace dolores {
             }
 
             template <typename E>
-            bool __call__(const E &event, StrAnyMap &state) const {
-                return (*lhs)(event, state) && (*rhs)(event, state);
+            bool __call__(const E &event, Session &session) const {
+                return (*lhs)(event, session) && (*rhs)(event, session);
             }
 
-            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::MessageEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::NoticeEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::RequestEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::UserEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
         };
 
@@ -123,24 +123,24 @@ namespace dolores {
             }
 
             template <typename E>
-            bool __call__(const E &event, StrAnyMap &state) const {
-                return (*lhs)(event, state) || (*rhs)(event, state);
+            bool __call__(const E &event, Session &session) const {
+                return (*lhs)(event, session) || (*rhs)(event, session);
             }
 
-            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::MessageEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::NoticeEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::RequestEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::UserEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
         };
 
@@ -163,25 +163,25 @@ namespace dolores {
             }
 
             template <typename E>
-            bool __call__(const E &event, StrAnyMap &state) const {
+            bool __call__(const E &event, Session &session) const {
                 return std::all_of(
-                    conditions.cbegin(), conditions.cend(), [&](const auto &cond) { return (*cond)(event, state); });
+                    conditions.cbegin(), conditions.cend(), [&](const auto &cond) { return (*cond)(event, session); });
             }
 
-            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::MessageEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::NoticeEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::NoticeEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::RequestEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::RequestEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
 
-            bool operator()(const cq::UserEvent &event, StrAnyMap &state) const override {
-                return __call__(event, state);
+            bool operator()(const cq::UserEvent &event, Session &session) const override {
+                return __call__(event, session);
             }
         };
 
@@ -255,7 +255,7 @@ namespace dolores {
                 : names(names), starters(std::move(starters)) {
             }
 
-            bool operator()(const cq::MessageEvent &event, StrAnyMap &state) const override {
+            bool operator()(const cq::MessageEvent &event, Session &session) const override {
                 bool starter_ok = false;
                 std::string matched_starter;
                 for (const auto &starter : (starters.empty() ? default_starters : starters)) {
@@ -274,15 +274,15 @@ namespace dolores {
                 const auto res = std::find(names.cbegin(), names.cend(), candidate_name) != names.cend();
 
                 if (res) {
-                    state[STARTER] = matched_starter;
-                    state[NAME] = candidate_name;
+                    session[STARTER] = matched_starter;
+                    session[NAME] = candidate_name;
 
                     const auto arg_beg_off = first_space - event.message.cbegin() + 1;
                     if (arg_beg_off < event.message.length()) {
-                        state[ARGUMENT] =
+                        session[ARGUMENT] =
                             std::string_view(event.message.data() + arg_beg_off, event.message.length() - arg_beg_off);
                     } else {
-                        state[ARGUMENT] = std::string_view("");
+                        session[ARGUMENT] = std::string_view("");
                     }
                 }
 

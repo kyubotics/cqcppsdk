@@ -6,22 +6,22 @@
 #include <string>
 #include <type_traits>
 
-#include "anymap.hpp"
 #include "condition.hpp"
+#include "session.hpp"
 #include "traits.hpp"
 
 namespace dolores {
     template <typename E, typename = enable_if_derived_from_user_event_t<E>>
     struct BaseCurrent {
         const E &event;
-        StrAnyMap state;
+        Session &session;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
         explicit BaseCurrent(const T &event) : event(event) {
         }
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        BaseCurrent(const T &event, StrAnyMap &&state) : event(event), state(std::move(state)) {
+        BaseCurrent(const T &event, Session &session) : event(event), session(session) {
         }
 
         virtual ~BaseCurrent() = default;
@@ -50,17 +50,17 @@ namespace dolores {
         using BaseCurrent<cq::MessageEvent>::BaseCurrent;
 
         std::string command_name() const {
-            if (state.count(cond::command::ARGUMENT) == 0) {
+            if (session.count(cond::command::ARGUMENT) == 0) {
                 return "";
             }
-            return std::any_cast<std::string>(state.at(cond::command::NAME));
+            return std::any_cast<std::string>(session.at(cond::command::NAME));
         }
 
         std::string command_argument() const {
-            if (state.count(cond::command::ARGUMENT) == 0) {
+            if (session.count(cond::command::ARGUMENT) == 0) {
                 return "";
             }
-            const auto sv = std::any_cast<std::string_view>(state.at(cond::command::ARGUMENT));
+            const auto sv = std::any_cast<std::string_view>(session.at(cond::command::ARGUMENT));
             return std::string(sv.cbegin(), sv.cend());
         }
     };

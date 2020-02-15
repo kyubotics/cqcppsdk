@@ -1,9 +1,7 @@
-#define CATCH_CONFIG_MAIN
-
 #include "test_dolores.hpp"
-
 #include "cqcppsdk/cqcppsdk.h"
-//
+
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 namespace cq {
