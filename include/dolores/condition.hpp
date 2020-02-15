@@ -239,9 +239,9 @@ namespace dolores {
         };
 
         struct command : Condition {
-            static constexpr const char *STARTER = "_cond__command__starter";
-            static constexpr const char *NAME = "_cond__command__name";
-            static constexpr const char *ARGUMENT = "_cond__command__argument";
+            static constexpr auto STARTER = "_cond__command__starter";
+            static constexpr auto NAME = "_cond__command__name";
+            static constexpr auto ARGUMENT = "_cond__command__argument";
 
             std::vector<std::string> names;
             std::vector<std::string> starters;
