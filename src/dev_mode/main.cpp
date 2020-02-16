@@ -23,6 +23,7 @@ using namespace cq;
 using std::cout;
 using std::endl;
 using std::string;
+using std::cin;
 using std::wcin;
 using std::wstring;
 using std::getline;
