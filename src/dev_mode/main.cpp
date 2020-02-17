@@ -1,8 +1,9 @@
+#include "../core/common.h"
+
 #include <csignal>
 #include <iostream>
 
 #include "../core/api.h"
-#include "../core/common.h"
 #include "../core/event.h"
 #include "../core/event_callback.h"
 #include "../core/init.h"
@@ -18,8 +19,14 @@
 #include <io.h>
 #endif
 
-using namespace std;
 using namespace cq;
+using std::cout;
+using std::endl;
+using std::string;
+using std::cin;
+using std::wcin;
+using std::wstring;
+using std::getline;
 using cq::utils::call_all;
 using cq::utils::ws2s;
 
@@ -48,7 +55,7 @@ static void exit_callback() {
 #endif
 }
 
-static void sig_handler(int signum) {
+static void sig_handler(int) {
     exit_callback();
 }
 

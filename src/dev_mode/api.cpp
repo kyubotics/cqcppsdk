@@ -11,8 +11,12 @@
 #include "../core/event.h"
 #include "./mock.h"
 
-using namespace std;
-namespace fs = cq::dir::stdfs;
+namespace fs = cq::dir::fs;
+using std::cout;
+using std::endl;
+using std::boolalpha;
+using std::string;
+using std::pair;
 
 namespace cq {
     void _init_api() {
@@ -20,7 +24,7 @@ namespace cq {
 
 #pragma region Message
 
-    static int64_t message_id = 0;
+    static int64_t curr_message_id = 0;
 
     template <typename... Args>
     void print_api_call(const string &name, const pair<const char *, Args> &... args) {
@@ -30,17 +34,17 @@ namespace cq {
 
     int64_t send_private_message(const int64_t user_id, const std::string &message) {
         print_api_call("send_private_message", pair{"user_id", user_id}, pair{"message", message});
-        return ++message_id;
+        return ++curr_message_id;
     }
 
     int64_t send_group_message(const int64_t group_id, const std::string &message) {
         print_api_call("send_group_message", pair{"group_id", group_id}, pair{"message", message});
-        return ++message_id;
+        return ++curr_message_id;
     }
 
     int64_t send_discuss_message(const int64_t discuss_id, const std::string &message) {
         print_api_call("send_discuss_message", pair{"discuss_id", discuss_id}, pair{"message", message});
-        return ++message_id;
+        return ++curr_message_id;
     }
 
     void delete_message(const int64_t message_id) {

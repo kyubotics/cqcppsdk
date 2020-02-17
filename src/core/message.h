@@ -2,7 +2,6 @@
 
 #include "./common.h"
 
-#include "../utils/string.h"
 #include "./api.h"
 
 namespace cq::message {
@@ -62,12 +61,12 @@ namespace cq::message {
 
         // Emoji 表情
         static MessageSegment emoji(const uint32_t id) {
-            return {"emoji", {{"id", std::to_string(id)}}};
+            return {"emoji", {{"id", to_string(id)}}};
         }
 
         // QQ 表情
         static MessageSegment face(const int id) {
-            return {"face", {{"id", std::to_string(id)}}};
+            return {"face", {{"id", to_string(id)}}};
         }
 
         // 图片
@@ -77,12 +76,12 @@ namespace cq::message {
 
         // 语音
         static MessageSegment record(const std::string &file, const bool magic = false) {
-            return {"record", {{"file", file}, {"magic", std::to_string(magic)}}};
+            return {"record", {{"file", file}, {"magic", to_string(magic)}}};
         }
 
         // @某人
         static MessageSegment at(const int64_t user_id) {
-            return {"at", {{"qq", std::to_string(user_id)}}};
+            return {"at", {{"qq", to_string(user_id)}}};
         }
 
         // 猜拳魔法表情
@@ -102,7 +101,7 @@ namespace cq::message {
 
         // 匿名发消息
         static MessageSegment anonymous(const bool ignore_failure = false) {
-            return {"anonymous", {{"ignore", std::to_string(ignore_failure)}}};
+            return {"anonymous", {{"ignore", to_string(ignore_failure)}}};
         }
 
         // 链接分享
@@ -119,7 +118,7 @@ namespace cq::message {
                 "contact",
                 {
                     {"type", type == ContactType::USER ? "qq" : "group"},
-                    {"id", std::to_string(id)},
+                    {"id", to_string(id)},
                 },
             };
         }
@@ -130,8 +129,8 @@ namespace cq::message {
             return {
                 "location",
                 {
-                    {"lat", std::to_string(latitude)},
-                    {"lon", std::to_string(longitude)},
+                    {"lat", to_string(latitude)},
+                    {"lon", to_string(longitude)},
                     {"title", title},
                     {"content", content},
                 },
@@ -140,12 +139,12 @@ namespace cq::message {
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id) {
-            return {"music", {{"type", type}, {"id", std::to_string(id)}}};
+            return {"music", {{"type", type}, {"id", to_string(id)}}};
         }
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id, const int32_t style) {
-            return {"music", {{"type", type}, {"id", std::to_string(id)}, {"style", std::to_string(style)}}};
+            return {"music", {{"type", type}, {"id", to_string(id)}, {"style", to_string(style)}}};
         }
 
         // 音乐自定义分享
@@ -190,9 +189,7 @@ namespace cq::message {
             const auto is_cq_code_begin = [&](const char ch) { return ch == '[' && peek_n(3) == "CQ:"; };
 
             // 定义状态
-            static const auto S0 = 0;
-            static const auto S1 = 1;
-            auto state = S0;
+            enum { S0, S1 } state = S0;
 
             std::string temp_text; // 暂存以后可能作为 text 类型消息段保存的内容
             std::string cq_code; // 不包含 [CQ: 和 ] 的 CQ 码内容, 如 image,file=abc.jpg
@@ -262,8 +259,6 @@ namespace cq::message {
                         cq_code += ch;
                         temp_text += ch;
                     }
-                    break;
-                default:
                     break;
                 }
             }
@@ -378,9 +373,3 @@ namespace cq::message {
         return std::string(lhs) == std::string(rhs);
     }
 } // namespace cq::message
-
-namespace std {
-    inline string to_string(const cq::message::Message &msg) {
-        return string(msg);
-    }
-} // namespace std

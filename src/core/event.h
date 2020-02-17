@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./common.h"
+
 #include "./target.h"
 #include "./type.h"
 
@@ -313,8 +314,8 @@ namespace cq {
     };
 } // namespace cq
 
-namespace std {
-    inline string to_string(cq::UserEvent::Type type) {
+namespace cq {
+    inline std::string to_string(cq::UserEvent::Type type) {
         using Type = cq::UserEvent::Type;
         switch (type) {
         case Type::MESSAGE:
@@ -328,7 +329,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::MessageEvent::DetailType detail_type) {
+    inline std::string to_string(cq::MessageEvent::DetailType detail_type) {
         using DetailType = cq::MessageEvent::DetailType;
         switch (detail_type) {
         case DetailType::PRIVATE:
@@ -342,7 +343,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::NoticeEvent::DetailType detail_type) {
+    inline std::string to_string(cq::NoticeEvent::DetailType detail_type) {
         using DetailType = cq::NoticeEvent::DetailType;
         switch (detail_type) {
         case DetailType::GROUP_UPLOAD:
@@ -362,7 +363,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::RequestEvent::Operation operation) {
+    inline std::string to_string(cq::RequestEvent::Operation operation) {
         using Operation = cq::RequestEvent::Operation;
         switch (operation) {
         case Operation::APPROVE:
@@ -374,7 +375,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::RequestEvent::DetailType detail_type) {
+    inline std::string to_string(cq::RequestEvent::DetailType detail_type) {
         using DetailType = cq::RequestEvent::DetailType;
         switch (detail_type) {
         case DetailType::FRIEND:
@@ -386,15 +387,11 @@ namespace std {
         }
     }
 
-    inline string to_string(const cq::RequestEvent::Flag &flag) {
-        return string(flag);
-    }
-
-    inline string to_string(cq::UserEvent::SubType sub_type) {
+    inline std::string to_string(cq::UserEvent::SubType sub_type) {
         return "default";
     }
 
-    inline string to_string(cq::PrivateMessageEvent::SubType sub_type) {
+    inline std::string to_string(cq::PrivateMessageEvent::SubType sub_type) {
         using SubType = cq::PrivateMessageEvent::SubType;
         switch (sub_type) {
         case SubType::FRIEND:
@@ -410,7 +407,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::GroupAdminEvent::SubType sub_type) {
+    inline std::string to_string(cq::GroupAdminEvent::SubType sub_type) {
         using SubType = cq::GroupAdminEvent::SubType;
         switch (sub_type) {
         case SubType::UNSET:
@@ -422,7 +419,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::GroupMemberDecreaseEvent::SubType sub_type) {
+    inline std::string to_string(cq::GroupMemberDecreaseEvent::SubType sub_type) {
         using SubType = cq::GroupMemberDecreaseEvent::SubType;
         switch (sub_type) {
         case SubType::LEAVE:
@@ -436,7 +433,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::GroupMemberIncreaseEvent::SubType sub_type) {
+    inline std::string to_string(cq::GroupMemberIncreaseEvent::SubType sub_type) {
         using SubType = cq::GroupMemberIncreaseEvent::SubType;
         switch (sub_type) {
         case SubType::APPROVE:
@@ -448,7 +445,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::GroupBanEvent::SubType sub_type) {
+    inline std::string to_string(cq::GroupBanEvent::SubType sub_type) {
         using SubType = cq::GroupBanEvent::SubType;
         switch (sub_type) {
         case SubType::LIFT_BAN:
@@ -460,7 +457,7 @@ namespace std {
         }
     }
 
-    inline string to_string(cq::GroupRequestEvent::SubType sub_type) {
+    inline std::string to_string(cq::GroupRequestEvent::SubType sub_type) {
         using SubType = cq::GroupRequestEvent::SubType;
         switch (sub_type) {
         case SubType::ADD:
@@ -471,4 +468,4 @@ namespace std {
             return "unknown";
         }
     }
-} // namespace std
+} // namespace cq

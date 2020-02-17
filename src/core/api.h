@@ -10,7 +10,7 @@ namespace cq {
     // API 调用失败
     struct ApiError : RuntimeError {
         ApiError(const int code)
-            : RuntimeError("failed to call coolq api, error code: " + std::to_string(code)), code(code) {
+            : RuntimeError("failed to call coolq api, error code: " + to_string(code)), code(code) {
         }
 
         const int code; // 错误码
@@ -35,14 +35,14 @@ namespace cq {
         if (target.group_id.has_value()) {
             if (at_user && target.user_id.has_value()) {
                 return send_group_message(target.group_id.value(),
-                                          "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+                                          "[CQ:at,qq=" + to_string(target.user_id.value()) + "] " + message);
             }
             return send_group_message(target.group_id.value(), message);
         }
         if (target.discuss_id.has_value()) {
             if (at_user && target.user_id.has_value()) {
                 return send_discuss_message(target.discuss_id.value(),
-                                            "[CQ:at,qq=" + std::to_string(target.user_id.value()) + "] " + message);
+                                            "[CQ:at,qq=" + to_string(target.user_id.value()) + "] " + message);
             }
             return send_discuss_message(target.discuss_id.value(), message);
         }
@@ -89,7 +89,7 @@ namespace cq {
     void set_group_request(const RequestEvent::Flag &flag, const GroupRequestEvent::SubType &sub_type,
                            const RequestEvent::Operation operation, const std::string &reason = "") noexcept(false);
 
-    // 获取登录号 Id (QQ 号)
+    // 获取登录号 ID (QQ 号)
     int64_t get_login_user_id() noexcept(false);
     // 获取登录号昵称
     std::string get_login_nickname() noexcept(false);

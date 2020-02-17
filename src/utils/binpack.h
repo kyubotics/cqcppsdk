@@ -7,8 +7,8 @@
 namespace cq {
     struct BytesNotEnough : LogicError {
         BytesNotEnough(size_t have, size_t needed)
-            : LogicError("there aren't enough bytes remained (have " + std::to_string(have) + ", but "
-                         + std::to_string(needed) + " are/is needed)") {
+            : LogicError("there aren't enough bytes remained (have " + to_string(have) + ", but "
+                         + to_string(needed) + " are/is needed)") {
         }
     };
 } // namespace cq

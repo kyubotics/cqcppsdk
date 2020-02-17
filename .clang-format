@@ -14,3 +14,4 @@ PointerAlignment: Right
 AlignTrailingComments: false
 SpacesInContainerLiterals: false
 AllowShortFunctionsOnASingleLine: None
+IncludeBlocks: Preserve
