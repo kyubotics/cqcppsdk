@@ -13,27 +13,15 @@
 #include "traits.hpp"
 
 namespace dolores {
-    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
+    template <typename E>
     class Handler {
+        static_assert(is_derived_from_user_event_v<E>);
     public:
-        explicit Handler(std::function<void(Current<E> &current)> func, std::shared_ptr<MatcherBase> matcher = nullptr)
-            : _func(std::move(func)), _matcher(std::move(matcher)) {
-        }
-
-        bool match(const E &event, Session &session) const {
-            if (!_matcher) return true;
-            return _matcher->match(event, session);
-        }
-
-        void run(Current<E> &current) const {
-            if (!_func) return;
-            _func(current);
-        }
-
-    private:
-        std::shared_ptr<MatcherBase> _matcher;
-        std::function<void(Current<E> &current)> _func;
+        virtual ~Handler() = 0;
+        virtual bool match(const E &event, Session &session) const = 0;
+        virtual void run(Current<E> &current)  = 0;
     };
+    inline Handler::~Handler() = default;
 
     struct _HandlerVecWrapper {
         template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
@@ -80,6 +68,27 @@ namespace dolores {
             }
         }
     }
+
+    template <typename E, typename RunFunc, typename AllMatcher>
+    class HandlerImplementation : public Handler<E> {
+        static_assert(is_derived_from_user_event_v<E>);
+    public:
+        explicit HandlerImplementation(Func func, AllMatcher matcher)
+                : _func(std::move(func)), _matcher(std::move(matcher)) {
+        }
+
+        bool match(const E &event, Session &session) const override {
+            return _matcher(event, session);
+        }
+
+        void run(Current<E> &current) const override {
+            _func(current);
+        }
+
+    private:
+        RunFunc _func;
+        AllMatcher _matcher;
+    };
 } // namespace dolores
 
 #define _DOLORES_UNIQUE_NAME_2(Name, Number) Name##Number
@@ -88,8 +97,8 @@ namespace dolores {
 
 #define _DOLORES_MAKE_HANDLER_2(EventType, FuncName, ...)                                                  \
     static void FuncName(dolores::Current<EventType> &);                                                   \
-    static const auto FuncName##_res = dolores::add_handler(std::make_shared<dolores::Handler<EventType>>( \
-        FuncName, std::make_shared<dolores::matchers::all>(__VA_ARGS__)));                                 \
+    static const auto FuncName##_res = dolores::add_handler(std::make_shared<dolores::HandlerImplementation<EventType>>( \
+        FuncName, dolores::matchers::all(__VA_ARGS__)));                                 \
     static void FuncName(dolores::Current<EventType> &current)
 #define _DOLORES_MAKE_HANDLER(EventType, FuncName, ...) _DOLORES_MAKE_HANDLER_2(EventType, FuncName, __VA_ARGS__)
 

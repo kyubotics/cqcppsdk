@@ -10,9 +10,16 @@ std::pair<cq::PrivateMessageEvent, Session> construct_pm() {
     return {cq::PrivateMessageEvent(1, 1, "hello, world", 0, cq::PrivateMessageEvent::SubType::FRIEND), Session()};
 }
 
+template<class T>
+struct MatcherWrapper
+{
+    template<class...Args> bool match(Args &&...args) const { return x(std::forward<Args>(args)...); }
+    T x;
+};
+
 template <typename Cond>
-std::shared_ptr<MatcherBase> to_matcher(Cond &&c) {
-    return std::make_shared<std::decay_t<Cond>>(std::forward<Cond>(c));
+auto to_matcher(Cond &&c) {
+    return std::make_shared<MatcherWrapper<Cond>>(MatcherWrapper<Cond>{std::forward<Cond>(c)});
 }
 
 TEST_CASE("matchers::operator!", "[matcher]") {

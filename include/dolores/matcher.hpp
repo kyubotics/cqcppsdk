@@ -17,308 +17,95 @@
 #include "watashi.hpp"
 
 namespace dolores {
-    class MatcherBase {
-    public:
-        virtual bool match(const cq::MessageEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
-        }
+    class MatcherBase {};
 
-        virtual bool match(const cq::NoticeEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
-        }
-
-        virtual bool match(const cq::RequestEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
-        }
-
-        virtual bool match(const cq::UserEvent &event, Session &session) const {
-            return false;
-        }
-    };
-
-    class MessageMatcher : virtual public MatcherBase {
-    public:
-        virtual bool match(const cq::Target &target, const std::string_view &message, Session &session) const {
-            return false;
-        }
-
-        bool match(const cq::MessageEvent &event, Session &session) const final {
-            return match(event.target, event.message, session);
-        }
-    };
+    class MessageMatcher : public MatcherBase {};
 
     namespace matchers {
-        class _NotMatcher : public MatcherBase {
-        public:
-            template <typename T, typename = std::enable_if_t<is_matcher_v<T>>>
-            explicit _NotMatcher(T &&matcher) : _matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
-            }
-
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-        protected:
-            std::shared_ptr<MatcherBase> _matcher;
-
-            template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return !_matcher->match(event, session);
-            }
-        };
-
-        class _NotMessageMatcher : public MessageMatcher {
-        public:
-            template <typename T, typename = std::enable_if_t<is_message_matcher_v<T>>>
-            explicit _NotMessageMatcher(T &&matcher)
-                : _matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
-            }
-
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return !_matcher->match(target, message, session);
-            }
-
-        protected:
-            std::shared_ptr<MessageMatcher> _matcher;
-        };
-
-        class _AndMatcher : public MatcherBase {
-        public:
-            template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<TL, TR>>>
-            _AndMatcher(TL &&lhs, TR &&rhs)
-                : _lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
-                  _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
-            }
-
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-        protected:
-            std::shared_ptr<MatcherBase> _lhs;
-            std::shared_ptr<MatcherBase> _rhs;
-
-            template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return _lhs->match(event, session) && _rhs->match(event, session);
-            }
-        };
-
-        class _AndMessageMatcher : public MessageMatcher {
-        public:
-            template <typename TL, typename TR, typename = std::enable_if_t<is_message_matcher_v<TL, TR>>>
-            _AndMessageMatcher(TL &&lhs, TR &&rhs)
-                : _lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
-                  _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
-            }
-
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return _lhs->match(target, message, session) && _rhs->match(target, message, session);
-            }
-
-        protected:
-            std::shared_ptr<MessageMatcher> _lhs;
-            std::shared_ptr<MessageMatcher> _rhs;
-        };
-
-        class _OrMatcher : public MatcherBase {
-        public:
-            template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<TL, TR>>>
-            _OrMatcher(TL &&lhs, TR &&rhs)
-                : _lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
-                  _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
-            }
-
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-        protected:
-            std::shared_ptr<MatcherBase> _lhs;
-            std::shared_ptr<MatcherBase> _rhs;
-
-            template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return _lhs->match(event, session) || _rhs->match(event, session);
-            }
-        };
-
-        class _OrMessageMatcher : public MessageMatcher {
-        public:
-            template <typename TL, typename TR, typename = std::enable_if_t<is_message_matcher_v<TL, TR>>>
-            _OrMessageMatcher(TL &&lhs, TR &&rhs)
-                : _lhs(std::make_shared<std::decay_t<TL>>(std::forward<TL>(lhs))),
-                  _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
-            }
-
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return _lhs->match(target, message, session) || _rhs->match(target, message, session);
-            }
-
-        protected:
-            std::shared_ptr<MessageMatcher> _lhs;
-            std::shared_ptr<MessageMatcher> _rhs;
-        };
-
-        template <typename T, typename = std::enable_if_t<is_matcher_v<T>>>
-        inline auto operator!(T &&matcher) {
-            if constexpr (is_message_matcher_v<T>) {
-                return _NotMessageMatcher(std::forward<T>(matcher));
-            } else {
-                return _NotMatcher(std::forward<T>(matcher));
-            }
+        inline namespace {
+            // another overload is in traits.hpp, for ADL
+            template <class Fn> std::true_type is_in_matchers_namespace(Fn &&);
         }
 
-        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<TL, TR>>>
-        inline auto operator&&(TL &&lhs, TR &&rhs) {
-            if constexpr (is_message_matcher_v<TL> && is_message_matcher_v<TR>) {
-                return _AndMessageMatcher(std::forward<TL>(lhs), std::forward<TR>(rhs));
-            } else {
-                return _AndMatcher(std::forward<TL>(lhs), std::forward<TR>(rhs));
-            }
+        template <typename T>
+        constexpr auto operator!(T &&matcher) {
+            return [matcher](auto&&...args){ return !matcher(std::forward<decltype(args)>(args)...); };
         }
 
-        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<TL, TR>>>
-        inline auto operator||(TL &&lhs, TR &&rhs) {
-            if constexpr (is_message_matcher_v<TL> && is_message_matcher_v<TR>) {
-                return _OrMessageMatcher(std::forward<TL>(lhs), std::forward<TR>(rhs));
-            } else {
-                return _OrMatcher(std::forward<TL>(lhs), std::forward<TR>(rhs));
-            }
+        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
+        constexpr auto operator&&(TL &&lhs, TR &&rhs) {
+            return [lhs, rhs](auto&&...args){ return lhs(args...) && rhs(args...); };
         }
 
-        class all : public MatcherBase {
-        public:
-            template <typename... Matchers>
-            explicit all(Matchers &&... matchers)
-                : _matchers({std::make_shared<std::decay_t<Matchers>>(std::forward<Matchers>(matchers))...}) {
-            }
+        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
+        constexpr auto operator||(TL &&lhs, TR &&rhs) {
+            return [lhs, rhs](auto&&...args){ return lhs(args...) || rhs(args...); };
+        }
 
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
-            }
-
-        protected:
-            std::vector<std::shared_ptr<MatcherBase>> _matchers;
-
-            template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return std::all_of(_matchers.cbegin(), _matchers.cend(), [&](const auto &matcher) {
-                    return matcher->match(event, session);
-                });
-            }
-        };
+        template <typename...Matchers>
+        constexpr auto all(Matchers &&...matchers) {
+            return [matchers...](auto&&...args){ return (matchers(args...) && ...); };
+        }
 
         template <typename E>
-        struct _type {
-            class matcher_t : public MatcherBase {
-            public:
-                bool match(const cq::UserEvent &event, Session &session) const override {
-                    return typeid(event) == typeid(E);
-                }
-            };
+        constexpr auto type = [](const auto &event, Session &session){ return typeid(event) == typeid(E); };
 
-            static constexpr matcher_t matcher{};
-        };
+        constexpr auto unblocked() {
+            return [](const cq::UserEvent &event, Session &session){ return !event.blocked(); };
+        }
 
-        template <typename E>
-        constexpr auto type = _type<E>::matcher;
-
-        class unblocked : public MatcherBase {
-        public:
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return !event.blocked();
-            }
-        };
-
-        class startswith : public MessageMatcher {
+        class startswith {
         public:
             explicit startswith(std::string prefix) : _prefix(std::move(prefix)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::startswith(message, _prefix);
+            }
+
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
             }
 
         protected:
             std::string _prefix;
         };
 
-        class endswith : public MessageMatcher {
+        class endswith {
         public:
             explicit endswith(std::string suffix) : _suffix(std::move(suffix)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::endswith(message, _suffix);
+            }
+
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
             }
 
         protected:
             std::string _suffix;
         };
 
-        class contains : public MessageMatcher {
+        class contains {
         public:
             explicit contains(std::string sub) : _sub(std::move(sub)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::contains(message, _sub);
+            }
+
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
             }
 
         protected:
             std::string _sub;
         };
 
-        class command : public MessageMatcher {
+        class command {
         public:
             static constexpr auto STARTER = "_cond__command__starter";
             static constexpr auto NAME = "_cond__command__name";
@@ -332,9 +119,8 @@ namespace dolores {
                 : _names(names), _starters(std::move(starters)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 static const std::vector<std::string> default_starters = {"/", "!", ".", "！", "。"};
-
                 const auto message_v = string::string_view_from(
                     std::find_if_not(message.cbegin(), message.cend(), cq::utils::isspace_s), message.cend());
 
@@ -369,22 +155,24 @@ namespace dolores {
                 return res;
             }
 
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
+            }
+
         protected:
             std::vector<std::string> _names;
             std::vector<std::string> _starters;
         };
 
-        class to_me : public MessageMatcher {
+        template<class T = void>
+        class to_me {
         public:
-            to_me() = default;
-
-            template <typename T, typename = std::enable_if_t<std::is_base_of_v<MessageMatcher, T>>>
-            explicit to_me(T &&matcher) : _sub_matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
+            explicit to_me(T &&matcher) : _sub_matcher(matcher) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 if (target.is_private()) {
-                    return _sub_matcher ? _sub_matcher->match(target, message, session) : true;
+                    return _sub_matcher(target, message, session);
                 }
 
                 using cq::message::MessageSegment;
@@ -392,8 +180,6 @@ namespace dolores {
                 const auto at_me_off = message.find(at_me_seg);
                 if (at_me_off == std::string_view::npos) {
                     return false;
-                } else if (!_sub_matcher) {
-                    return true;
                 }
 
                 // assert: _sub_matcher is not null
@@ -404,7 +190,7 @@ namespace dolores {
 
                 const auto before_at_v = std::string_view(message.data(), at_me_off);
                 const auto after_at_v =
-                    string::string_view_from(message.cbegin() + at_me_off + at_me_seg.length(), message.cend());
+                        string::string_view_from(message.cbegin() + at_me_off + at_me_seg.length(), message.cend());
                 std::string_view cut_message_v;
                 if (is_full_of_spaces(before_at_v)) {
                     // @me is at the beginning of message
@@ -416,14 +202,45 @@ namespace dolores {
                     // @me is in the middle of message
                     cut_message_v = message;
                 }
-                return _sub_matcher->match(target, cut_message_v, session);
+                return _sub_matcher(target, cut_message_v, session);
+            };
+
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
             }
 
         private:
-            std::shared_ptr<MessageMatcher> _sub_matcher;
+            T _sub_matcher;
         };
 
-        class user : public MatcherBase {
+        template<>
+        class to_me<void> {
+        public:
+            to_me() = default;
+
+            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
+                if (target.is_private()) {
+                    return true;
+                }
+
+                using cq::message::MessageSegment;
+                const auto at_me_seg = cq::to_string(MessageSegment::at(watashi::user_id()));
+                const auto at_me_off = message.find(at_me_seg);
+                if (at_me_off == std::string_view::npos) {
+                    return false;
+                }
+
+                return true;
+            };
+
+            bool operator()(const cq::MessageEvent &event, Session &session) const {
+                return (*this)(event.target, event.message, session);
+            }
+        };
+        to_me() -> to_me<void>;
+        template<class T> to_me(T) -> to_me<T>;
+
+        class user {
         public:
             user() = default;
 
@@ -436,7 +253,7 @@ namespace dolores {
                 return u;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool operator()(const cq::UserEvent &event, Session &session) const {
                 if (!_include_users.empty()) {
                     return std::find(_include_users.cbegin(), _include_users.cend(), event.user_id)
                            != _include_users.cend();
@@ -463,13 +280,13 @@ namespace dolores {
                 return d;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool operator()(const cq::UserEvent &event, Session &session) const {
                 if (!event.target.is_private()) return false;
-                return user::match(event, session);
+                return user::operator()(event, session);
             }
         };
 
-        class group : public MatcherBase {
+        class group {
         public:
             group() = default;
 
@@ -482,7 +299,7 @@ namespace dolores {
                 return g;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool operator()(const cq::UserEvent &event, Session &session) const {
                 if (!event.target.is_group()) return false;
 
                 const auto group_id = event.target.group_id.value_or(0);
@@ -502,19 +319,19 @@ namespace dolores {
             std::vector<int64_t> _exclude_groups;
         };
 
-        class discuss : public MatcherBase {
+        class discuss {
         public:
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool operator()(const cq::UserEvent &event, Session &session) const {
                 return event.target.is_discuss();
             }
         };
 
-        class group_roles : public MatcherBase {
+        class group_roles {
         public:
             explicit group_roles(std::vector<cq::GroupRole> roles) : _roles(std::move(roles)) {
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool operator()(const cq::UserEvent &event, Session &session) const {
                 if (!event.target.is_group()) return true; // ignore non-group event
 
                 const auto group_id = event.target.group_id.value_or(0);
