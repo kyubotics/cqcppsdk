@@ -17,41 +17,34 @@
 #include "watashi.hpp"
 
 namespace dolores {
-    class MatcherBase {};
-
-    class MessageMatcher : public MatcherBase {};
-
     namespace matchers {
-        inline namespace {
-            // another overload is in traits.hpp, for ADL
-            template <class Fn> std::true_type is_in_matchers_namespace(Fn &&);
-        }
-
-        template <typename T>
+        template <typename T, typename = std::enable_if_t<is_matcher_v<std::decay_t<T>>>>
         constexpr auto operator!(T &&matcher) {
-            return [matcher](auto&&...args){ return !matcher(std::forward<decltype(args)>(args)...); };
+            return [matcher](auto &&... args) { return !matcher(std::forward<decltype(args)>(args)...); };
         }
 
-        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
+        template <typename TL, typename TR,
+                  typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
         constexpr auto operator&&(TL &&lhs, TR &&rhs) {
-            return [lhs, rhs](auto&&...args){ return lhs(args...) && rhs(args...); };
+            return [lhs, rhs](auto &&... args) { return lhs(args...) && rhs(args...); };
         }
 
-        template <typename TL, typename TR, typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
+        template <typename TL, typename TR,
+                  typename = std::enable_if_t<is_matcher_v<std::decay_t<TL>> && is_matcher_v<std::decay_t<TR>>>>
         constexpr auto operator||(TL &&lhs, TR &&rhs) {
-            return [lhs, rhs](auto&&...args){ return lhs(args...) || rhs(args...); };
+            return [lhs, rhs](auto &&... args) { return lhs(args...) || rhs(args...); };
         }
 
-        template <typename...Matchers>
-        constexpr auto all(Matchers &&...matchers) {
-            return [matchers...](auto&&...args){ return (matchers(args...) && ...); };
+        template <typename... Matchers>
+        constexpr auto all(Matchers &&... matchers) {
+            return [=](auto &&... args) { return (matchers(args...) && ...); };
         }
 
         template <typename E>
-        constexpr auto type = [](const auto &event, Session &session){ return typeid(event) == typeid(E); };
+        constexpr auto type = [](const auto &event, Session &session) { return typeid(event) == typeid(E); };
 
         constexpr auto unblocked() {
-            return [](const cq::UserEvent &event, Session &session){ return !event.blocked(); };
+            return [](const cq::UserEvent &event, Session &session) { return !event.blocked(); };
         }
 
         class startswith {
@@ -164,7 +157,7 @@ namespace dolores {
             std::vector<std::string> _starters;
         };
 
-        template<class T = void>
+        template <class T = void>
         class to_me {
         public:
             explicit to_me(T &&matcher) : _sub_matcher(matcher) {
@@ -190,7 +183,7 @@ namespace dolores {
 
                 const auto before_at_v = std::string_view(message.data(), at_me_off);
                 const auto after_at_v =
-                        string::string_view_from(message.cbegin() + at_me_off + at_me_seg.length(), message.cend());
+                    string::string_view_from(message.cbegin() + at_me_off + at_me_seg.length(), message.cend());
                 std::string_view cut_message_v;
                 if (is_full_of_spaces(before_at_v)) {
                     // @me is at the beginning of message
@@ -213,7 +206,7 @@ namespace dolores {
             T _sub_matcher;
         };
 
-        template<>
+        template <>
         class to_me<void> {
         public:
             to_me() = default;
@@ -237,8 +230,9 @@ namespace dolores {
                 return (*this)(event.target, event.message, session);
             }
         };
-        to_me() -> to_me<void>;
-        template<class T> to_me(T) -> to_me<T>;
+        to_me()->to_me<void>;
+        template <class T>
+        to_me(T)->to_me<T>;
 
         class user {
         public:
