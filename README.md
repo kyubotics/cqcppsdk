@@ -55,6 +55,8 @@ CQ_MENU(menu_demo_1) { logging::info("菜单", "点击菜单1"); }
 项目 | 简介
 --- | ---
 [richardchien/xiaofan-bot](https://github.com/richardchien/xiaofan-bot) | CQMOE 小秘书莫小凡
+[dynilath/coolq-dicebot](https://github.com/dynilath/coolq-dicebot) | 骰子机器人
+[MoeMod/CQuery](https://github.com/MoeMod/CQuery) | CS1.6/CSGO 服务器查询
 
 ## 问题反馈
 
