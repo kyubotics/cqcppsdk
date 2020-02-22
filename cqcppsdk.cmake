@@ -7,6 +7,11 @@ if (WIN32)
     add_definitions(-DWIN32) # 确保 Win32 环境下存在 WIN32 定义
 endif ()
 
+# 检查是否支持构建 std 模式
+if ((MSVC OR MSYS OR MINGW) AND (CMAKE_SIZEOF_VOID_P EQUAL 4))
+    set(CQ_CAN_BUILD_STD_MODE YES)
+endif ()
+
 # 获取 cqcppsdk 所在路径
 set(_CQCPPSDK_DIR ${CMAKE_CURRENT_LIST_DIR})
 message(STATUS "cqcppsdk dir: ${_CQCPPSDK_DIR}")
@@ -30,17 +35,28 @@ function(cq_add_app OUT_NAME)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/dev_mode/*.cpp)
         message(STATUS "add dev mode executable: ${OUT_NAME}")
         add_executable(${OUT_NAME} ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+    elseif (NOT CQ_CAN_BUILD_STD_MODE)
+        # 试图构建 std 模式, 但当前工具链无法构建
+        message(SEND_ERROR "can not build std mode with the current toolchain")
     else ()
-        # Std 模式, 产生 Windows 动态链接库, 即可被酷Q加载的插件(进而可打包为 CPK), 仅限 Windows 上使用 MSVC x86 工具链构建
+        # Std 模式, 产生 Windows 动态链接库, 即可被酷Q加载的插件(进而可打包为 CPK)
         add_definitions(-D_CQ_STD_MODE)
         file(GLOB_RECURSE _CQCPPSDK_MODE_SOURCE_FILES ${_CQCPPSDK_DIR}/src/std_mode/*.cpp)
         message(STATUS "add std mode dll: ${OUT_NAME}")
         add_library(${OUT_NAME} SHARED ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
+        set_target_properties(${OUT_NAME} PROPERTIES PREFIX "") # 去除 lib 前缀
     endif ()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-        # 在 GCC 8.x 环境下使用 std::filesystem 需要链接 stdc++fs
-        target_link_libraries(${OUT_NAME} stdc++fs)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        # MinGW 编译时, 静态链接, 修正 stdcall 导出名, 支持导入 stdcall 的 dll (--enable-stdcall-fixup)
+        if (NOT CQCPPSDK_DEV_MODE)
+            target_link_options(${OUT_NAME} PRIVATE -static -Wl,--kill-at,--enable-stdcall-fixup)
+        endif ()
+
+        if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+            # 在 GCC 8.x 环境下使用 std::filesystem 需要链接 stdc++fs
+            target_link_libraries(${OUT_NAME} stdc++fs)
+        endif ()
     endif ()
 endfunction()
 
