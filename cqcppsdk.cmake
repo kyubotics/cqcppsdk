@@ -1,8 +1,3 @@
-if (MSVC AND NOT (${CMAKE_CXX_FLAGS} MATCHES "/[uU][tT][fF]-8"))
-    message(STATUS "turn on msvc utf-8")
-    set(CMAKE_CXX_FLAGS "/utf-8 ${CMAKE_CXX_FLAGS}") # 设置 MSVC 编译器识别 UTF-8 编码的源文件
-endif ()
-
 if (WIN32)
     add_definitions(-DWIN32) # 确保 Win32 环境下存在 WIN32 定义
 endif ()
@@ -50,6 +45,8 @@ function(cq_add_app OUT_NAME)
         add_library(${OUT_NAME} SHARED ${ARGN} ${_CQCPPSDK_SOURCE_FILES} ${_CQCPPSDK_MODE_SOURCE_FILES})
         set_target_properties(${OUT_NAME} PROPERTIES PREFIX "") # 去除 lib 前缀
     endif ()
+
+    target_compile_options(${OUT_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         # MinGW 编译时, 静态链接, 修正 stdcall 导出名, 支持导入 stdcall 的 dll (--enable-stdcall-fixup)
