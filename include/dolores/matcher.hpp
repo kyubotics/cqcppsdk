@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <bitset>
 
 #include "session.hpp"
 #include "string.hpp"
@@ -49,10 +50,10 @@ namespace dolores {
 
         class startswith {
         public:
-            explicit startswith(std::string prefix) : _prefix(std::move(prefix)) {
+            explicit constexpr startswith(std::string_view prefix) : _prefix(prefix) {
             }
 
-            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
+            constexpr bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::startswith(message, _prefix);
             }
 
@@ -61,15 +62,15 @@ namespace dolores {
             }
 
         protected:
-            std::string _prefix;
+            std::string_view _prefix;
         };
 
         class endswith {
         public:
-            explicit endswith(std::string suffix) : _suffix(std::move(suffix)) {
+            explicit constexpr endswith(std::string_view suffix) : _suffix(suffix) {
             }
 
-            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
+            constexpr bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::endswith(message, _suffix);
             }
 
@@ -78,15 +79,15 @@ namespace dolores {
             }
 
         protected:
-            std::string _suffix;
+            std::string_view _suffix;
         };
 
         class contains {
         public:
-            explicit contains(std::string sub) : _sub(std::move(sub)) {
+            explicit constexpr contains(std::string_view sub) : _sub(sub) {
             }
 
-            bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
+            constexpr bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 return string::contains(message, _sub);
             }
 
@@ -95,7 +96,7 @@ namespace dolores {
             }
 
         protected:
-            std::string _sub;
+            std::string_view _sub;
         };
 
         class command {
@@ -209,7 +210,7 @@ namespace dolores {
         template <>
         class to_me<void> {
         public:
-            to_me() = default;
+            constexpr to_me() = default;
 
             bool operator()(const cq::Target &target, const std::string_view &message, Session &session) const {
                 if (target.is_private()) {
@@ -322,8 +323,15 @@ namespace dolores {
 
         class group_roles {
         public:
-            explicit group_roles(std::vector<cq::GroupRole> roles) : _roles(std::move(roles)) {
-            }
+            static constexpr std::size_t MAX_ROLES = 3;
+
+            //template<std::size_t...I>
+            //constexpr group_roles(std::initializer_list<cq::GroupRole> il, std::index_sequence<I...>) : _roles(((1ull << static_cast<std::size_t>(*(il.begin() + I))) || ...)) {}
+
+            //constexpr group_roles(std::initializer_list<cq::GroupRole> il) : group_roles(il, std::make_index_sequence<MAX_ROLES>()) {}
+
+            template<class...Args, class = std::enable_if_t<(std::is_same_v<Args, cq::GroupRole> && ...)>>
+            constexpr group_roles(Args...args) : _roles(((1ull << static_cast<std::size_t>(args)) || ...)) {  }
 
             bool operator()(const cq::UserEvent &event, Session &session) const {
                 if (!event.target.is_group()) return true; // ignore non-group event
@@ -331,12 +339,12 @@ namespace dolores {
                 const auto group_id = event.target.group_id.value_or(0);
                 try {
                     const auto mi = cq::get_group_member_info(group_id, event.user_id);
-                    return std::find(_roles.cbegin(), _roles.cend(), mi.role) != _roles.cend();
+                    return _roles.test(static_cast<std::size_t>(mi.role));
                 } catch (cq::ApiError &) {
                     // try again with cache disabled
                     try {
                         const auto mi = cq::get_group_member_info(group_id, event.user_id, true);
-                        return std::find(_roles.cbegin(), _roles.cend(), mi.role) != _roles.cend();
+                        return _roles.test(static_cast<std::size_t>(mi.role));
                     } catch (cq::ApiError &) {
                         return false;
                     }
@@ -344,18 +352,18 @@ namespace dolores {
             }
 
         protected:
-            std::vector<cq::GroupRole> _roles;
+            std::bitset<MAX_ROLES> _roles;
         };
 
         class admin : public group_roles {
         public:
-            admin() : group_roles({cq::GroupRole::ADMIN, cq::GroupRole::OWNER}) {
+            constexpr admin() : group_roles({cq::GroupRole::ADMIN, cq::GroupRole::OWNER}) {
             }
         };
 
         class owner : public group_roles {
         public:
-            owner() : group_roles({cq::GroupRole::OWNER}) {
+            constexpr owner() : group_roles({cq::GroupRole::OWNER}) {
             }
         };
     } // namespace matchers
