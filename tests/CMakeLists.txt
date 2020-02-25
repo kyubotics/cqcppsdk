@@ -12,4 +12,5 @@ cq_add_test(test_dolores
         test_dolores_string.cpp
         test_dolores_matcher.cpp
         test_dolores_watashi.cpp
-        test_dolores_traits.cpp)
+        test_dolores_traits.cpp
+        test_dolores_handler.cpp)
