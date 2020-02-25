@@ -35,7 +35,14 @@ inline void call_all_catch_all(const Cont &funcs, Args &&... args) {
  */
 _CQ_EVENT(const char *, AppInfo, 0)
 () {
-    return "9," APP_ID;
+#ifndef _CQ_APP_ID
+#define _CQ_APP_ID ""
+#define _CQ_APP_ID_DEFINED
+#endif
+    return "9," _CQ_APP_ID;
+#ifdef _CQ_APP_ID_DEFINED
+#undef _CQ_APP_ID
+#endif
 }
 
 /**

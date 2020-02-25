@@ -1,10 +1,13 @@
-#include "./api.h"
+/**
+ * 本文件调用了所有 api.h 中声明的 API, 以便在链接时发现 api.cpp 中遗漏或签名不一致的错误.
+ * 本文件应该在 std 模式和 dev 模式加入链接; test 模式下测试编写者应该按需实现 API, 而不应链接此文件.
+ */
+
+#include "core/api.h"
 
 using namespace cq;
 
 namespace cq {
-    // 本函数调用所有 api.h 中声明的 API, 以便在链接时发现 api.cpp 中遗漏或签名不一致的错误.
-    // 本函数只是为了让编译器编译链接, 不应在任何地方手动调用.
     void __api_test() {
         send_private_message(0, "");
         send_group_message(0, "");
