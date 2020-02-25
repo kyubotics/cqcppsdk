@@ -124,8 +124,6 @@ TEST_CASE("matchers::command", "[matcher]") {
 }
 
 TEST_CASE("matchers::at_me", "[matcher]") {
-    watashi::_user_id() = LOGIN_ID;
-
     SECTION("private message") {
         auto [event, matcher_data] = construct_pm();
         REQUIRE(to_matcher(to_me())->match(event, matcher_data));

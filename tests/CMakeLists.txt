@@ -10,4 +10,5 @@ cq_add_test(test_dolores
         test_dolores.cpp
         test_dolores_anymap.cpp
         test_dolores_string.cpp
-        test_dolores_matcher.cpp)
+        test_dolores_matcher.cpp
+        test_dolores_watashi.cpp)
