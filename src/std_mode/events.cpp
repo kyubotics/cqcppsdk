@@ -50,7 +50,7 @@ _CQ_EVENT(const char *, AppInfo, 0)
  */
 _CQ_EVENT(int32_t, Initialize, 4)
 (const int32_t auth_code) {
-    _ac = auth_code;
+    _ac() = auth_code;
     _init();
     _init_api();
     call_all_catch_all(cq::_initialize_callbacks());
