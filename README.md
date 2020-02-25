@@ -33,7 +33,7 @@ CQ_INIT {
 
 ## 样例项目
 
-项目 | 简介
+样例 | 简介
 --- | ---
 [打包资源文件](https://github.com/cqmoe/cqcppsdk-example-packing-resources) | 将资源文件打包到 `app.dll`，并在运行时解包
 
