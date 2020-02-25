@@ -1,7 +1,6 @@
 macro(cq_add_test TEST_NAME)
     add_executable(${TEST_NAME} ${ARGN})
-    target_compile_definitions(${TEST_NAME} PUBLIC _CQ_TEST_MODE)
-    target_link_libraries(${TEST_NAME} PRIVATE cqcppsdk)
+    target_link_libraries(${TEST_NAME} PRIVATE cqcppsdk_test)
     add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     # Group under the "tests" project folder in IDEs such as Visual Studio.
     set_property(TARGET ${TEST_NAME} PROPERTY FOLDER "tests")

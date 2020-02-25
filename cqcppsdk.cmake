@@ -7,6 +7,11 @@ macro(cq_set_app_id APP_ID)
     set(_CQ_APP_ID ${APP_ID})
 endmacro()
 
+# 检查是否支持构建 std 模式
+if ((MSVC OR MSYS OR MINGW) AND (CMAKE_SIZEOF_VOID_P EQUAL 4))
+    set(CQ_CAN_BUILD_STD_MODE YES)
+endif ()
+
 # 添加酷Q应用构建目标, 在调用之前设置 CQCPPSDK_DEV_MODE 为 ON 可构建 dev 模式的可执行文件
 function(cq_add_app OUT_NAME)
     message(STATUS "dev mode: ${CQCPPSDK_DEV_MODE}")
@@ -30,8 +35,6 @@ function(cq_add_app OUT_NAME)
         target_link_libraries(${OUT_NAME} cqcppsdk_std)
         set_target_properties(${OUT_NAME} PROPERTIES PREFIX "") # 去除 lib 前缀
     endif ()
-
-    target_compile_options(${OUT_NAME} PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/utf-8>)
 endfunction()
 
 # 添加 std 模式构建目标, 可选参数为源文件列表
