@@ -16,8 +16,13 @@ namespace dolores {
     template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     class Handler {
     public:
-        explicit Handler(std::function<void(Current<E> &current)> func, std::shared_ptr<MatcherBase> matcher = nullptr)
-            : _func(std::move(func)), _matcher(std::move(matcher)) {
+        explicit Handler(std::function<void(Current<E> &current)> func, std::string name,
+                         std::shared_ptr<MatcherBase> matcher = nullptr)
+            : _func(std::move(func)), _name(std::move(name)), _matcher(std::move(matcher)) {
+        }
+
+        std::string name() const {
+            return _name;
         }
 
         bool match(const E &event, StrAnyMap &matcher_data) const {
@@ -31,8 +36,9 @@ namespace dolores {
         }
 
     private:
-        std::shared_ptr<MatcherBase> _matcher;
         std::function<void(Current<E> &current)> _func;
+        std::string _name;
+        std::shared_ptr<MatcherBase> _matcher;
     };
 
     struct _HandlerVecWrapper {
@@ -79,8 +85,9 @@ namespace dolores {
                         handler->run(current);
                     }
                 } catch (std::exception &err) {
-                    cq::logging::error("事件处理",
-                                       std::string("异常类型: ") + typeid(err).name() + " 异常信息: " + err.what());
+                    cq::logging::error("Dolores",
+                                       "事件处理程序 " + handler->name() + " 运行时抛出异常, "
+                                           + "异常类型: " + typeid(err).name() + ", 异常信息: " + err.what());
                 }
             }
         }
@@ -91,13 +98,17 @@ namespace dolores {
 #define _DOLORES_UNIQUE_NAME(Name, Number) _DOLORES_UNIQUE_NAME_2(Name, Number)
 #define _DOLORES_HANDLER_UNIQUE_NAME() _DOLORES_UNIQUE_NAME(__H_A_N_D_L_E_R__, __COUNTER__)
 
-#define _DOLORES_MAKE_HANDLER_2(EventType, FuncName, ...)                                                  \
+#define _DOLORES_MAKE_HANDLER_2(EventType, FuncName, Name, ...)                                            \
     static void FuncName(dolores::Current<EventType> &);                                                   \
     static const auto FuncName##_res = dolores::add_handler(std::make_shared<dolores::Handler<EventType>>( \
-        FuncName, std::make_shared<dolores::matchers::all>(__VA_ARGS__)));                                 \
+        FuncName, Name, std::make_shared<dolores::matchers::all>(__VA_ARGS__)));                           \
     static void FuncName(dolores::Current<EventType> &current)
-#define _DOLORES_MAKE_HANDLER(EventType, FuncName, ...) _DOLORES_MAKE_HANDLER_2(EventType, FuncName, __VA_ARGS__)
+#define _DOLORES_MAKE_HANDLER(EventType, FuncName, Name, ...) \
+    _DOLORES_MAKE_HANDLER_2(EventType, FuncName, Name, __VA_ARGS__)
 
-#define dolores_on_message(...) _DOLORES_MAKE_HANDLER(cq::MessageEvent, _DOLORES_HANDLER_UNIQUE_NAME(), __VA_ARGS__)
-#define dolores_on_notice(...) _DOLORES_MAKE_HANDLER(cq::NoticeEvent, _DOLORES_HANDLER_UNIQUE_NAME(), __VA_ARGS__)
-#define dolores_on_request(...) _DOLORES_MAKE_HANDLER(cq::RequestEvent, _DOLORES_HANDLER_UNIQUE_NAME(), __VA_ARGS__)
+#define dolores_on_message(Name, ...) \
+    _DOLORES_MAKE_HANDLER(cq::MessageEvent, _DOLORES_HANDLER_UNIQUE_NAME(), Name, __VA_ARGS__)
+#define dolores_on_notice(Name, ...) \
+    _DOLORES_MAKE_HANDLER(cq::NoticeEvent, _DOLORES_HANDLER_UNIQUE_NAME(), Name, __VA_ARGS__)
+#define dolores_on_request(Name, ...) \
+    _DOLORES_MAKE_HANDLER(cq::RequestEvent, _DOLORES_HANDLER_UNIQUE_NAME(), Name, __VA_ARGS__)
