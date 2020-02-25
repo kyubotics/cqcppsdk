@@ -9,4 +9,4 @@
 #include "../../src/core/logging.hpp"
 #include "../../src/core/menu.hpp"
 #include "../../src/core/message.hpp"
-#include "utils/string.hpp"
+#include "../../src/utils/string.hpp"
