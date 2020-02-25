@@ -25,7 +25,7 @@ function(cq_add_app OUT_NAME)
             message(WARNING "the name of std mode dll is required to be \"app\"")
         endif ()
         message(STATUS "add std mode dll: ${OUT_NAME}")
-        add_library(${OUT_NAME} SHARED ${ARGN})
+        add_library(${OUT_NAME} MODULE ${ARGN})
         target_link_libraries(${OUT_NAME} cqcppsdk_std_mode)
         set_target_properties(${OUT_NAME} PROPERTIES PREFIX "") # 去除 lib 前缀
     endif ()
