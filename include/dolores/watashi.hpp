@@ -5,11 +5,9 @@
 namespace dolores::watashi {
     inline auto &_user_id() {
         static int64_t val = 0;
-#ifndef _CQ_TEST_MODE
         if (val == 0) {
             val = cq::get_login_user_id();
         }
-#endif
         return val;
     }
 
@@ -19,11 +17,9 @@ namespace dolores::watashi {
 
     inline auto &_nickname() {
         static std::string val;
-#ifndef _CQ_TEST_MODE
         if (val.empty()) {
             val = cq::get_login_nickname();
         }
-#endif
         return val;
     }
 
