@@ -6,22 +6,25 @@
 #include <string>
 #include <type_traits>
 
+#include "anymap.hpp"
 #include "matcher.hpp"
-#include "session.hpp"
 #include "traits.hpp"
 
 namespace dolores {
+    template <typename E>
+    struct Current;
+
     template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
     struct CurrentBase {
         const E &event;
-        Session &session;
+        StrAnyMap &matcher_data;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
         explicit CurrentBase(const T &event) : event(event) {
         }
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        CurrentBase(const T &event, Session &session) : event(event), session(session) {
+        CurrentBase(const T &event, StrAnyMap &matcher_data) : event(event), matcher_data(matcher_data) {
         }
 
         virtual ~CurrentBase() = default;
@@ -40,7 +43,7 @@ namespace dolores {
         }
     };
 
-    template <typename E, typename = std::enable_if_t<is_derived_from_user_event_v<E>>>
+    template <typename E>
     struct Current : CurrentBase<E> {
         using CurrentBase<E>::CurrentBase;
     };
@@ -50,15 +53,15 @@ namespace dolores {
         using CurrentBase<cq::MessageEvent>::CurrentBase;
 
         std::string command_starter() const {
-            return std::string(session.get<std::string_view>(matchers::command::STARTER, ""));
+            return std::string(matcher_data.get<std::string_view>(matchers::command::STARTER, ""));
         }
 
         std::string command_name() const {
-            return std::string(session.get<std::string_view>(matchers::command::NAME, ""));
+            return std::string(matcher_data.get<std::string_view>(matchers::command::NAME, ""));
         }
 
         std::string command_argument() const {
-            return std::string(session.get<std::string_view>(matchers::command::ARGUMENT, ""));
+            return std::string(matcher_data.get<std::string_view>(matchers::command::ARGUMENT, ""));
         }
     };
 

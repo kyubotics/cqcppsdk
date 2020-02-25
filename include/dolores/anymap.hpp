@@ -6,7 +6,7 @@
 #include <type_traits>
 
 namespace dolores {
-    class Session : public std::map<std::string, std::any> {
+    class StrAnyMap : public std::map<std::string, std::any> {
     public:
         template <typename T>
         T get(const key_type &key) {

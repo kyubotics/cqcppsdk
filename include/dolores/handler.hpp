@@ -20,9 +20,9 @@ namespace dolores {
             : _func(std::move(func)), _matcher(std::move(matcher)) {
         }
 
-        bool match(const E &event, Session &session) const {
+        bool match(const E &event, StrAnyMap &matcher_data) const {
             if (!_matcher) return true;
-            return _matcher->match(event, session);
+            return _matcher->match(event, matcher_data);
         }
 
         void run(Current<E> &current) const {
@@ -65,16 +65,16 @@ namespace dolores {
     inline void run_handlers(const E &event) {
         const auto &handlers = _HandlerVecWrapper::handlers<E>();
         for (const auto &handler : handlers) {
-            Session session;
-            if (handler->match(event, session)) {
+            StrAnyMap matcher_data;
+            if (handler->match(event, matcher_data)) {
                 if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
-                    Current<cq::MessageEvent> current(event, session);
+                    Current<cq::MessageEvent> current(event, matcher_data);
                     handler->run(current);
                 } else if constexpr (std::is_base_of_v<cq::NoticeEvent, E>) {
-                    Current<cq::NoticeEvent> current(event, session);
+                    Current<cq::NoticeEvent> current(event, matcher_data);
                     handler->run(current);
                 } else { // std::is_base_of_v<cq::RequestEvent, E>
-                    Current<cq::RequestEvent> current(event, session);
+                    Current<cq::RequestEvent> current(event, matcher_data);
                     handler->run(current);
                 }
             }

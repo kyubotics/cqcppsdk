@@ -1,11 +1,11 @@
-#include "dolores/session.hpp"
+#include "dolores/anymap.hpp"
 
 #include "catch.hpp"
 
-TEST_CASE("Session", "[session]") {
+TEST_CASE("StrAnyMap", "[anymap]") {
     using namespace dolores;
 
-    Session m;
+    StrAnyMap m;
 
     m["foo"] = std::string("foo");
     REQUIRE(m.size() == 1);

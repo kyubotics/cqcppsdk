@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-#include "session.hpp"
+#include "anymap.hpp"
 #include "string.hpp"
 #include "traits.hpp"
 #include "watashi.hpp"
@@ -19,31 +19,31 @@
 namespace dolores {
     class MatcherBase {
     public:
-        virtual bool match(const cq::MessageEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
+        virtual bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const {
+            return match(static_cast<const cq::UserEvent &>(event), matcher_data);
         }
 
-        virtual bool match(const cq::NoticeEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
+        virtual bool match(const cq::NoticeEvent &event, StrAnyMap &matcher_data) const {
+            return match(static_cast<const cq::UserEvent &>(event), matcher_data);
         }
 
-        virtual bool match(const cq::RequestEvent &event, Session &session) const {
-            return match(static_cast<const cq::UserEvent &>(event), session);
+        virtual bool match(const cq::RequestEvent &event, StrAnyMap &matcher_data) const {
+            return match(static_cast<const cq::UserEvent &>(event), matcher_data);
         }
 
-        virtual bool match(const cq::UserEvent &event, Session &session) const {
+        virtual bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const {
             return false;
         }
     };
 
     class MessageMatcher : virtual public MatcherBase {
     public:
-        virtual bool match(const cq::Target &target, const std::string_view &message, Session &session) const {
+        virtual bool match(const cq::Target &target, const std::string_view &message, StrAnyMap &matcher_data) const {
             return false;
         }
 
-        bool match(const cq::MessageEvent &event, Session &session) const final {
-            return match(event.target, event.message, session);
+        bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const final {
+            return match(event.target, event.message, matcher_data);
         }
     };
 
@@ -54,28 +54,28 @@ namespace dolores {
             explicit _NotMatcher(T &&matcher) : _matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
             }
 
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::NoticeEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::RequestEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
         protected:
             std::shared_ptr<MatcherBase> _matcher;
 
             template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return !_matcher->match(event, session);
+            bool _match(const E &event, StrAnyMap &matcher_data) const {
+                return !_matcher->match(event, matcher_data);
             }
         };
 
@@ -86,8 +86,9 @@ namespace dolores {
                 : _matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return !_matcher->match(target, message, session);
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
+                return !_matcher->match(target, message, matcher_data);
             }
 
         protected:
@@ -102,20 +103,20 @@ namespace dolores {
                   _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::NoticeEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::RequestEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
         protected:
@@ -123,8 +124,8 @@ namespace dolores {
             std::shared_ptr<MatcherBase> _rhs;
 
             template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return _lhs->match(event, session) && _rhs->match(event, session);
+            bool _match(const E &event, StrAnyMap &matcher_data) const {
+                return _lhs->match(event, matcher_data) && _rhs->match(event, matcher_data);
             }
         };
 
@@ -136,8 +137,9 @@ namespace dolores {
                   _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return _lhs->match(target, message, session) && _rhs->match(target, message, session);
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
+                return _lhs->match(target, message, matcher_data) && _rhs->match(target, message, matcher_data);
             }
 
         protected:
@@ -153,20 +155,20 @@ namespace dolores {
                   _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::NoticeEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::RequestEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
         protected:
@@ -174,8 +176,8 @@ namespace dolores {
             std::shared_ptr<MatcherBase> _rhs;
 
             template <typename E>
-            bool _match(const E &event, Session &session) const {
-                return _lhs->match(event, session) || _rhs->match(event, session);
+            bool _match(const E &event, StrAnyMap &matcher_data) const {
+                return _lhs->match(event, matcher_data) || _rhs->match(event, matcher_data);
             }
         };
 
@@ -187,8 +189,9 @@ namespace dolores {
                   _rhs(std::make_shared<std::decay_t<TR>>(std::forward<TR>(rhs))) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
-                return _lhs->match(target, message, session) || _rhs->match(target, message, session);
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
+                return _lhs->match(target, message, matcher_data) || _rhs->match(target, message, matcher_data);
             }
 
         protected:
@@ -230,29 +233,29 @@ namespace dolores {
                 : _matchers({std::make_shared<std::decay_t<Matchers>>(std::forward<Matchers>(matchers))...}) {
             }
 
-            bool match(const cq::MessageEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::MessageEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::NoticeEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::NoticeEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::RequestEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::RequestEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
-                return _match(event, session);
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
+                return _match(event, matcher_data);
             }
 
         protected:
             std::vector<std::shared_ptr<MatcherBase>> _matchers;
 
             template <typename E>
-            bool _match(const E &event, Session &session) const {
+            bool _match(const E &event, StrAnyMap &matcher_data) const {
                 return std::all_of(_matchers.cbegin(), _matchers.cend(), [&](const auto &matcher) {
-                    return matcher->match(event, session);
+                    return matcher->match(event, matcher_data);
                 });
             }
         };
@@ -261,7 +264,7 @@ namespace dolores {
         struct _type {
             class matcher_t : public MatcherBase {
             public:
-                bool match(const cq::UserEvent &event, Session &session) const override {
+                bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                     return typeid(event) == typeid(E);
                 }
             };
@@ -274,7 +277,7 @@ namespace dolores {
 
         class unblocked : public MatcherBase {
         public:
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 return !event.blocked();
             }
         };
@@ -284,7 +287,8 @@ namespace dolores {
             explicit startswith(std::string prefix) : _prefix(std::move(prefix)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
                 return string::startswith(message, _prefix);
             }
 
@@ -297,7 +301,8 @@ namespace dolores {
             explicit endswith(std::string suffix) : _suffix(std::move(suffix)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
                 return string::endswith(message, _suffix);
             }
 
@@ -310,7 +315,8 @@ namespace dolores {
             explicit contains(std::string sub) : _sub(std::move(sub)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
                 return string::contains(message, _sub);
             }
 
@@ -332,7 +338,8 @@ namespace dolores {
                 : _names(names), _starters(std::move(starters)) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
                 static const std::vector<std::string> default_starters = {"/", "!", ".", "！", "。"};
 
                 const auto message_v = string::string_view_from(
@@ -356,13 +363,13 @@ namespace dolores {
                 const auto res = std::find(_names.cbegin(), _names.cend(), candidate_name_v) != _names.cend();
 
                 if (res) {
-                    session[STARTER] = matched_starter_v;
-                    session[NAME] = candidate_name_v;
+                    matcher_data[STARTER] = matched_starter_v;
+                    matcher_data[NAME] = candidate_name_v;
 
                     if (first_space < message_v.cend()) {
-                        session[ARGUMENT] = string::string_view_from(first_space + 1, message_v.cend());
+                        matcher_data[ARGUMENT] = string::string_view_from(first_space + 1, message_v.cend());
                     } else {
-                        session[ARGUMENT] = std::string_view("");
+                        matcher_data[ARGUMENT] = std::string_view("");
                     }
                 }
 
@@ -382,9 +389,10 @@ namespace dolores {
             explicit to_me(T &&matcher) : _sub_matcher(std::make_shared<std::decay_t<T>>(std::forward<T>(matcher))) {
             }
 
-            bool match(const cq::Target &target, const std::string_view &message, Session &session) const override {
+            bool match(const cq::Target &target, const std::string_view &message,
+                       StrAnyMap &matcher_data) const override {
                 if (target.is_private()) {
-                    return _sub_matcher ? _sub_matcher->match(target, message, session) : true;
+                    return _sub_matcher ? _sub_matcher->match(target, message, matcher_data) : true;
                 }
 
                 using cq::message::MessageSegment;
@@ -416,7 +424,7 @@ namespace dolores {
                     // @me is in the middle of message
                     cut_message_v = message;
                 }
-                return _sub_matcher->match(target, cut_message_v, session);
+                return _sub_matcher->match(target, cut_message_v, matcher_data);
             }
 
         private:
@@ -436,7 +444,7 @@ namespace dolores {
                 return u;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 if (!_include_users.empty()) {
                     return std::find(_include_users.cbegin(), _include_users.cend(), event.user_id)
                            != _include_users.cend();
@@ -463,9 +471,9 @@ namespace dolores {
                 return d;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 if (!event.target.is_private()) return false;
-                return user::match(event, session);
+                return user::match(event, matcher_data);
             }
         };
 
@@ -482,7 +490,7 @@ namespace dolores {
                 return g;
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 if (!event.target.is_group()) return false;
 
                 const auto group_id = event.target.group_id.value_or(0);
@@ -504,7 +512,7 @@ namespace dolores {
 
         class discuss : public MatcherBase {
         public:
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 return event.target.is_discuss();
             }
         };
@@ -514,7 +522,7 @@ namespace dolores {
             explicit group_roles(std::vector<cq::GroupRole> roles) : _roles(std::move(roles)) {
             }
 
-            bool match(const cq::UserEvent &event, Session &session) const override {
+            bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
                 if (!event.target.is_group()) return true; // ignore non-group event
 
                 const auto group_id = event.target.group_id.value_or(0);

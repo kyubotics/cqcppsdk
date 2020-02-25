@@ -2,11 +2,11 @@
 
 #include <cqcppsdk/cqcppsdk.h>
 
+#include "anymap.hpp"
 #include "current.hpp"
 #include "handler.hpp"
 #include "lifecycle.hpp"
 #include "matcher.hpp"
-#include "session.hpp"
 #include "string.hpp"
 #include "traits.hpp"
 
