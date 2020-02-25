@@ -1,6 +1,6 @@
-#include "./common.h"
+#include "common.hpp"
 
-#include "./api.h"
+#include "api.hpp"
 
 namespace cq::logging {
     enum Level {

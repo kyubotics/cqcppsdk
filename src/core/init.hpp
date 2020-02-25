@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
 namespace cq {
     // Auth Code, 在酷Q的 Initialize 事件中获得

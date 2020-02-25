@@ -1,14 +1,16 @@
 #pragma once
 
-#include "../core/common.h"
-#include "../core/exception.h"
-#include "./string.h"
+#include <algorithm>
+
+#include "string.hpp"
+
+#include "../core/exception.hpp"
 
 namespace cq {
     struct BytesNotEnough : LogicError {
         BytesNotEnough(size_t have, size_t needed)
-            : LogicError("there aren't enough bytes remained (have " + to_string(have) + ", but "
-                         + to_string(needed) + " are/is needed)") {
+            : LogicError("there aren't enough bytes remained (have " + to_string(have) + ", but " + to_string(needed)
+                         + " are/is needed)") {
         }
     };
 } // namespace cq

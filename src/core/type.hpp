@@ -1,10 +1,11 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
-#include "../utils/base64.h"
-#include "../utils/binpack.h"
-#include "./exception.h"
+#include "exception.hpp"
+
+#include "../utils/base64.hpp"
+#include "../utils/binpack.hpp"
 
 namespace cq {
     class ObjectHelper {

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "./common.h"
-#include "./event.h"
+#include "common.hpp"
+
+#include "event.hpp"
 
 namespace cq {
 #define DEF_EVENT(EventName, EventType)                                           \

@@ -2,12 +2,11 @@
  * 本文件需要从 CQP.dll 加载函数地址, 依赖 Windows.h, 必须在 Windows 环境下使用 MSVC 编译.
  */
 
-#include "../core/api.h"
+#include "../core/api.hpp"
+#include "../core/init.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-
-#include "../core/init.h"
 
 using std::enable_if_t;
 using std::is_integral_v;

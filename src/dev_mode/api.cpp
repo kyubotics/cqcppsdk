@@ -2,14 +2,14 @@
  * 本文件提供 api.h 的 mock 实现, 仅输出日志并返回模拟数据, 可在任何平台编译.
  */
 
-#include "../core/api.h"
-
 #include <filesystem>
 #include <iostream>
 
-#include "../core/dir.h"
-#include "../core/event.h"
-#include "./mock.h"
+#include "mock.hpp"
+
+#include "../core/api.hpp"
+#include "../core/dir.hpp"
+#include "../core/event.hpp"
 
 namespace fs = std::filesystem;
 using std::cout;

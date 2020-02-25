@@ -2,15 +2,13 @@
  * 本文件用于定义提供给酷Q调用的事件处理函数, 参数类型和参数名保持与酷Q原生一致.
  */
 
-#include "../core/common.h"
-
-#include "../core/api.h"
-#include "../core/event.h"
-#include "../core/event_callback.h"
-#include "../core/event_export_def.h"
-#include "../core/init.h"
-#include "../core/logging.h"
-#include "../utils/function.h"
+#include "../core/api.hpp"
+#include "../core/event.hpp"
+#include "../core/event_callback.hpp"
+#include "../core/event_export_def.hpp"
+#include "../core/init.hpp"
+#include "../core/logging.hpp"
+#include "../utils/function.hpp"
 
 using namespace cq;
 using std::string;

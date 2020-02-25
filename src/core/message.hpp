@@ -1,8 +1,8 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
-#include "./api.h"
+#include "api.hpp"
 
 namespace cq::message {
     // 对字符串做 CQ 码转义

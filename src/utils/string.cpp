@@ -1,4 +1,4 @@
-#include "./string.h"
+#include "string.hpp"
 
 #if defined(_CQ_STD_MODE)
 #define WIN32_LEAN_AND_MEAN

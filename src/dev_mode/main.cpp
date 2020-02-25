@@ -1,14 +1,13 @@
-#include "../core/common.h"
-
 #include <csignal>
 #include <iostream>
 
-#include "../core/api.h"
-#include "../core/event.h"
-#include "../core/event_callback.h"
-#include "../core/init.h"
-#include "../utils/function.h"
-#include "./mock.h"
+#include "mock.hpp"
+
+#include "../core/api.hpp"
+#include "../core/event.hpp"
+#include "../core/event_callback.hpp"
+#include "../core/init.hpp"
+#include "../utils/function.hpp"
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN

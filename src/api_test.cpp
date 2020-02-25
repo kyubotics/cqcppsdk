@@ -3,7 +3,7 @@
  * 本文件应该在 std 模式和 dev 模式加入链接; test 模式下测试编写者应该按需实现 API, 而不应链接此文件.
  */
 
-#include "core/api.h"
+#include "core/api.hpp"
 
 using namespace cq;
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
-#include "./api.h"
+#include "api.hpp"
 
 namespace cq::dir {
     namespace fs = std::filesystem;

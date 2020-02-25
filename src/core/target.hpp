@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
 namespace cq {
     // 用于表示触发事件的主体和指定消息发送目标

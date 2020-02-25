@@ -1,9 +1,9 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
-#include "./target.h"
-#include "./type.h"
+#include "target.hpp"
+#include "type.hpp"
 
 namespace cq {
     struct Event {

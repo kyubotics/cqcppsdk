@@ -1,10 +1,10 @@
 #pragma once
 
-#include "./common.h"
+#include "common.hpp"
 
-#include "./event.h"
-#include "./exception.h"
-#include "./type.h"
+#include "event.hpp"
+#include "exception.hpp"
+#include "type.hpp"
 
 namespace cq {
     // API 调用失败
