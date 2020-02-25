@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -330,17 +331,17 @@ namespace dolores {
             static constexpr auto NAME = "_cond__command__name";
             static constexpr auto ARGUMENT = "_cond__command__argument";
 
-            explicit command(std::string name, std::vector<std::string> starters = {})
+            explicit command(std::string name, std::unordered_set<std::string> starters = {})
                 : command({std::move(name)}, std::move(starters)) {
             }
 
-            command(std::initializer_list<std::string> names, std::vector<std::string> starters = {})
+            command(std::initializer_list<std::string> names, std::unordered_set<std::string> starters = {})
                 : _names(names), _starters(std::move(starters)) {
             }
 
             bool match(const cq::Target &target, const std::string_view &message,
                        StrAnyMap &matcher_data) const override {
-                static const std::vector<std::string> default_starters = {"/", "!", ".", "！", "。"};
+                static const std::unordered_set<std::string> default_starters = {"/", "!", ".", "！", "。"};
 
                 const auto message_v = string::string_view_from(
                     std::find_if_not(message.cbegin(), message.cend(), cq::utils::isspace_s), message.cend());
@@ -377,8 +378,8 @@ namespace dolores {
             }
 
         protected:
-            std::vector<std::string> _names;
-            std::vector<std::string> _starters;
+            std::unordered_set<std::string> _names;
+            std::unordered_set<std::string> _starters;
         };
 
         class to_me : public MessageMatcher {
@@ -435,10 +436,10 @@ namespace dolores {
         public:
             user() = default;
 
-            explicit user(std::vector<int64_t> include) : _include_users(std::move(include)) {
+            explicit user(std::unordered_set<int64_t> include) : _include_users(std::move(include)) {
             }
 
-            static user exclude(std::vector<int64_t> exclude) {
+            static user exclude(std::unordered_set<int64_t> exclude) {
                 user u;
                 u._exclude_users = std::move(exclude);
                 return u;
@@ -457,15 +458,15 @@ namespace dolores {
             }
 
         protected:
-            std::vector<int64_t> _include_users;
-            std::vector<int64_t> _exclude_users;
+            std::unordered_set<int64_t> _include_users;
+            std::unordered_set<int64_t> _exclude_users;
         };
 
         class direct : public user {
         public:
             using user::user;
 
-            static direct exclude(std::vector<int64_t> exclude) {
+            static direct exclude(std::unordered_set<int64_t> exclude) {
                 direct d;
                 d._exclude_users = std::move(exclude);
                 return d;
@@ -481,10 +482,10 @@ namespace dolores {
         public:
             group() = default;
 
-            explicit group(std::vector<int64_t> include) : _include_groups(std::move(include)) {
+            explicit group(std::unordered_set<int64_t> include) : _include_groups(std::move(include)) {
             }
 
-            static group exclude(std::vector<int64_t> exclude) {
+            static group exclude(std::unordered_set<int64_t> exclude) {
                 group g;
                 g._exclude_groups = std::move(exclude);
                 return g;
@@ -506,8 +507,8 @@ namespace dolores {
             }
 
         protected:
-            std::vector<int64_t> _include_groups;
-            std::vector<int64_t> _exclude_groups;
+            std::unordered_set<int64_t> _include_groups;
+            std::unordered_set<int64_t> _exclude_groups;
         };
 
         class discuss : public MatcherBase {
@@ -519,7 +520,7 @@ namespace dolores {
 
         class group_roles : public MatcherBase {
         public:
-            explicit group_roles(std::vector<cq::GroupRole> roles) : _roles(std::move(roles)) {
+            explicit group_roles(std::unordered_set<cq::GroupRole> roles) : _roles(std::move(roles)) {
             }
 
             bool match(const cq::UserEvent &event, StrAnyMap &matcher_data) const override {
@@ -541,7 +542,7 @@ namespace dolores {
             }
 
         protected:
-            std::vector<cq::GroupRole> _roles;
+            std::unordered_set<cq::GroupRole> _roles;
         };
 
         class admin : public group_roles {
