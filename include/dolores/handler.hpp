@@ -67,15 +67,20 @@ namespace dolores {
         for (const auto &handler : handlers) {
             StrAnyMap matcher_data;
             if (handler->match(event, matcher_data)) {
-                if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
-                    Current<cq::MessageEvent> current(event, matcher_data);
-                    handler->run(current);
-                } else if constexpr (std::is_base_of_v<cq::NoticeEvent, E>) {
-                    Current<cq::NoticeEvent> current(event, matcher_data);
-                    handler->run(current);
-                } else { // std::is_base_of_v<cq::RequestEvent, E>
-                    Current<cq::RequestEvent> current(event, matcher_data);
-                    handler->run(current);
+                try {
+                    if constexpr (std::is_base_of_v<cq::MessageEvent, E>) {
+                        Current<cq::MessageEvent> current(event, matcher_data);
+                        handler->run(current);
+                    } else if constexpr (std::is_base_of_v<cq::NoticeEvent, E>) {
+                        Current<cq::NoticeEvent> current(event, matcher_data);
+                        handler->run(current);
+                    } else { // std::is_base_of_v<cq::RequestEvent, E>
+                        Current<cq::RequestEvent> current(event, matcher_data);
+                        handler->run(current);
+                    }
+                } catch (std::exception &err) {
+                    cq::logging::error("事件处理",
+                                       std::string("异常类型: ") + typeid(err).name() + " 异常信息: " + err.what());
                 }
             }
         }

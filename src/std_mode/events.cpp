@@ -23,7 +23,7 @@ inline void call_all_catch_all(const Cont &funcs, Args &&... args) {
         try {
             call_if_valid(f, std::forward<Args>(args)...);
         } catch (std::exception &e) {
-            logging::error("事件处理", string("异常类型: ") + typeid(e).name() + "\n异常信息: " + e.what());
+            logging::error("事件处理", string("异常类型: ") + typeid(e).name() + " 异常信息: " + e.what());
         }
     }
 }
