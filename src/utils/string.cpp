@@ -1,6 +1,8 @@
 #include "string.hpp"
 
-#if defined(_CQ_STD_MODE)
+#include "memory.hpp"
+
+#ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
@@ -8,7 +10,7 @@
 namespace cq::utils {
     std::string string_convert_encoding(const std::string &text, const std::string &from_enc, const std::string &to_enc,
                                         float capability_factor) {
-#if defined(_CQ_STD_MODE)
+#ifdef _CQ_STD_MODE
         // 正在使用 std 模式, 经过酷Q的字符串可使用 libiconv 转码
         using iconv_t = void *;
         static HMODULE iconv_dll = nullptr;
@@ -53,7 +55,48 @@ namespace cq::utils {
 
         return result;
 #else
-        return text; // Dev 模式下原样返回
+        return text; // dev 模式下原样返回
+#endif
+    }
+
+#ifdef WIN32
+    // static std::shared_ptr<wchar_t> win32_mb2wchar(const unsigned code_page, const char *mb_str) {
+    //     const auto len = MultiByteToWideChar(code_page, 0, mb_str, -1, nullptr, 0);
+    //     auto c_wstr_p = make_shared_array<wchar_t>(len + 1);
+    //     MultiByteToWideChar(code_page, 0, mb_str, -1, c_wstr_p.get(), len);
+    //     return c_wstr_p;
+    // }
+
+    static std::shared_ptr<char> win32_wchar2mb(const unsigned code_page, const wchar_t *wchar_str) {
+        const auto len = WideCharToMultiByte(code_page, 0, wchar_str, -1, nullptr, 0, nullptr, nullptr);
+        auto c_str_p = make_shared_array<char>(len + 1);
+        WideCharToMultiByte(code_page, 0, wchar_str, -1, c_str_p.get(), len, nullptr, nullptr);
+        return c_str_p;
+    }
+
+    enum class Win32Encoding : unsigned {
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756.aspx
+
+        ANSI = 0,
+        UTF8 = 65001,
+        GB2312 = 936,
+        GB18030 = 54936,
+    };
+
+    static std::string win32_string_encode(const std::string &s, const Win32Encoding encoding) {
+        return win32_wchar2mb(static_cast<unsigned>(encoding), s2ws(s).c_str()).get();
+    }
+
+    // static std::string win32_string_decode(const std::string &b, const Win32Encoding encoding) {
+    //     return ws2s(std::wstring(win32_mb2wchar(static_cast<unsigned>(encoding), b.c_str()).get()));
+    // }
+#endif
+
+    std::string ansi(const std::string &s) {
+#ifdef WIN32
+        return win32_string_encode(s, Win32Encoding::ANSI);
+#else
+        return s; // 如果不是 Windows, 则原样返回
 #endif
     }
 } // namespace cq::utils

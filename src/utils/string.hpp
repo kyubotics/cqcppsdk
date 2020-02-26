@@ -17,6 +17,8 @@ namespace cq::utils {
         return std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t>().from_bytes(s);
     }
 
+    std::string ansi(const std::string &s);
+
     std::string string_convert_encoding(const std::string &text, const std::string &from_enc, const std::string &to_enc,
                                         float capability_factor);
 
