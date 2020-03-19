@@ -6,7 +6,7 @@
 #include "../core/init.hpp"
 
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+#include <windows.h>
 
 using std::enable_if_t;
 using std::is_integral_v;

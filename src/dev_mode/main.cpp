@@ -14,7 +14,7 @@
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <Windows.h>
+#include <windows.h>
 #undef IGNORE // 避免名字冲突
 #include <fcntl.h>
 #include <io.h>
