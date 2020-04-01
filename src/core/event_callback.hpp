@@ -52,8 +52,8 @@ namespace cq {
 
     DEF_EVENT(group_upload, const GroupUploadEvent &) // 群文件上传事件
     DEF_EVENT(group_admin, const GroupAdminEvent &) // 群管理员变动事件
-    DEF_EVENT(group_member_decrease, const GroupMemberDecreaseEvent &) // 群成员增加事件
-    DEF_EVENT(group_member_increase, const GroupMemberIncreaseEvent &) // 群成员减少事件
+    DEF_EVENT(group_member_decrease, const GroupMemberDecreaseEvent &) // 群成员减少事件
+    DEF_EVENT(group_member_increase, const GroupMemberIncreaseEvent &) // 群成员增加事件
     DEF_EVENT(group_ban, const GroupBanEvent &) // 群禁言事件
     DEF_EVENT(friend_add, const FriendAddEvent &) // 好友添加事件
 
