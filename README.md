@@ -44,6 +44,7 @@ CQ_INIT {
 [richardchien/xiaofan-bot](https://github.com/richardchien/xiaofan-bot) | CQMOE 小秘书莫小凡
 [dynilath/coolq-dicebot](https://github.com/dynilath/coolq-dicebot) | 骰子机器人
 [MoeMod/CQuery](https://github.com/MoeMod/CQuery) | CS1.6/CSGO 服务器查询
+[zhaoguoqingit/KeyWord](https://github.com/zhaoguoqingit/KeyWord) | 关键词触发器
 
 ## 问题反馈
 
