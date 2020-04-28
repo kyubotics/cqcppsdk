@@ -30,7 +30,7 @@ namespace dolores {
         virtual ~CurrentBase() = default;
 
         template <typename T, typename = std::enable_if_t<std::is_base_of_v<E, T>>>
-        auto event_as() const {
+        decltype(auto) event_as() const {
             return dynamic_cast<const std::decay_t<T> &>(event);
         }
 
