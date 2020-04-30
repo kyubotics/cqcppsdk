@@ -35,7 +35,7 @@ namespace cq::message {
 #define MSG_SEG(val) val,
 #include "./message_segment_types.inc"
 #undef MSG_SEG
-            none
+            unimpl
         };
 
         static constexpr char *const SegTypesName[] = {
@@ -44,7 +44,7 @@ namespace cq::message {
 #undef MSG_SEG
             ""};
 
-        SegTypes type = SegTypes::none; // 消息段类型 (即 CQ 码的功能名)
+        SegTypes type = SegTypes::unimpl; // 消息段类型 (即 CQ 码的功能名)
         std::map<std::string, std::string> data; // 消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
 
         std::string SegTypeName() const {
@@ -55,7 +55,11 @@ namespace cq::message {
         operator std::string() const {
             std::string s;
             switch (this->type) {
-            case SegTypes::none: {
+            case SegTypes::unimpl: {
+                if (!this->data.empty()) {
+                    auto iter = this->data.begin();
+                    s += "[CQ:" + iter->first + "," + iter->second + "]";
+                }
                 return s;
             }
             case SegTypes::text: {
@@ -189,7 +193,7 @@ namespace cq::message {
 #define MSG_SEG(val) {#val, MessageSegment::SegTypes::val},
 #include "./message_segment_types.inc"
 #undef MSG_SEG
-        {"", MessageSegment::SegTypes::none}};
+        {"", MessageSegment::SegTypes::unimpl}};
 
     struct Message : std::list<MessageSegment> {
         using std::list<MessageSegment>::list;
@@ -232,21 +236,23 @@ namespace cq::message {
                 std::string type, param;
                 std::map<std::string, std::string> data;
                 getline(iss, type, ','); // 读取功能名
-                while (iss) {
-                    getline(iss, param, ','); // 读取一个参数
-                    string_trim(param);
-                    if (param.empty()) continue;
-                    const auto eq_pos = param.find('=');
-                    data.emplace(
-                        std::string(param.begin(), param.begin() + eq_pos),
-                        eq_pos != std::string::npos ? std::string(param.begin() + eq_pos + 1, param.end()) : "");
-                    param.clear();
-                }
-                auto iter = SegTypeName2SegTypes.find(type);
-                if (iter != SegTypeName2SegTypes.end()) {
-                    this->push_back(MessageSegment{iter->second, std::move(data)});
+                auto segtype_iter = SegTypeName2SegTypes.find(type);
+                if (segtype_iter == SegTypeName2SegTypes.end()) {
+                    getline(iss, param, ']');
+                    data.emplace(std::string(type), std::string(param));
+                    this->push_back(MessageSegment{MessageSegment::SegTypes::unimpl, std::move(data)});
                 } else {
-                    this->push_back(MessageSegment{MessageSegment::SegTypes::none, std::move(data)});
+                    while (iss) {
+                        getline(iss, param, ','); // 读取一个参数
+                        string_trim(param);
+                        if (param.empty()) continue;
+                        const auto eq_pos = param.find('=');
+                        data.emplace(
+                            std::string(param.begin(), param.begin() + eq_pos),
+                            eq_pos != std::string::npos ? std::string(param.begin() + eq_pos + 1, param.end()) : "");
+                        param.clear();
+                    }
+                    this->push_back(MessageSegment{segtype_iter->second, std::move(data)});
                 }
                 cq_code.clear();
                 temp_text.clear();
