@@ -19,11 +19,12 @@ namespace cq {
         const int code; // 错误码
 
         static const auto INVALID_DATA = 100; // 酷Q返回的数据无效
-        static const auto INVALID_TARGET = 101; // 发送目标无效
+        // static const auto INVALID_TARGET = 101; // 发送目标无效
         static const auto INVALID_ARGS = 102; // 参数无效
         static const auto LOG_DISABLED = -5; // 日志功能未启用
         static const auto LOG_PRIORITY_ERR = -6; // 日志优先级错误
         static const auto DATABASE_ERR = -7; // 数据入库失败
+        static const auto INVALID_TARGET = -23; // 找不到与目标的关系，消息无法发送
         static const auto APP_DISABLED = -997; // 应用未启用，请在应用窗中启用应用
         static const auto UNAUTHORIZED = -998; // 应用调用在 auth 声明之外的 Api，见日志警告。在 app.json
                                                // 中添加相应的 auth，授予应用该 Api 的调用权限。
@@ -61,6 +62,8 @@ namespace cq {
             throw ApiErrorDatabaseErr();
         case APP_DISABLED:
             throw ApiErrorAppDisabled();
+        case INVALID_TARGET:
+            throw ApiErrorInvalidTarget();
         case UNAUTHORIZED:
             throw ApiErrorUnauthorized();
         case UNKOWN_ERR:
