@@ -35,7 +35,7 @@ namespace cq {
     template <typename T, enable_if_t<is_integral_v<T>> * = nullptr>
     inline decltype(auto) chk(T &&res) noexcept(false) {
         if (res < 0) {
-            throw ApiError(static_cast<int>(res));
+            ApiError::InvokeError(static_cast<int>(res));
         }
         return std::forward<T>(res);
     }
@@ -43,7 +43,7 @@ namespace cq {
     template <typename T, enable_if_t<is_pointer_v<T>> * = nullptr>
     inline decltype(auto) chk(T &&res_ptr) noexcept(false) {
         if (!res_ptr) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
         return std::forward<T>(res_ptr);
     }
@@ -154,7 +154,7 @@ namespace cq {
         try {
             return ObjectHelper::from_base64<User>(chk(raw::CQ_getStrangerInfo(_ac(), user_id, no_cache)));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
@@ -162,7 +162,7 @@ namespace cq {
         try {
             return ObjectHelper::multi_from_base64<std::vector<Friend>>(chk(raw::CQ_getFriendList(_ac(), false)));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
@@ -170,7 +170,7 @@ namespace cq {
         try {
             return ObjectHelper::multi_from_base64<std::vector<Group>>(chk(raw::CQ_getGroupList(_ac())));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
@@ -178,7 +178,7 @@ namespace cq {
         try {
             return ObjectHelper::from_base64<Group>(chk(raw::CQ_getGroupInfo(_ac(), group_id, no_cache)));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
@@ -187,7 +187,7 @@ namespace cq {
             return ObjectHelper::multi_from_base64<std::vector<GroupMember>>(
                 chk(raw::CQ_getGroupMemberList(_ac(), group_id)));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
@@ -196,7 +196,7 @@ namespace cq {
             return ObjectHelper::from_base64<GroupMember>(
                 chk(raw::CQ_getGroupMemberInfoV2(_ac(), group_id, user_id, no_cache)));
         } catch (ParseError &) {
-            throw ApiError(ApiError::INVALID_DATA);
+            throw ApiErrorInvalidData();
         }
     }
 
