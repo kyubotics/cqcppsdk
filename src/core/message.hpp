@@ -31,83 +31,104 @@ namespace cq::message {
 
     // 消息段 (即 CQ 码)
     struct MessageSegment {
-        std::string type; // 消息段类型 (即 CQ 码的功能名)
+        enum class SegTypes {
+#define MSG_SEG(val) val,
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+            none
+        };
+
+        static constexpr char *const SegTypesName[] = {
+#define MSG_SEG(val) #val,
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+            ""};
+
+        SegTypes type = SegTypes::none; // 消息段类型 (即 CQ 码的功能名)
         std::map<std::string, std::string> data; // 消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
+
+        std::string SegTypeName() const {
+            return SegTypesName[static_cast<size_t>(this->type)];
+        }
 
         // 转换为字符串形式
         operator std::string() const {
             std::string s;
-            if (this->type.empty()) {
+            switch (this->type) {
+            case SegTypes::none: {
                 return s;
             }
-            if (this->type == "text") {
+            case SegTypes::text: {
                 if (const auto it = this->data.find("text"); it != this->data.end()) {
                     s += escape((*it).second, false);
                 }
-            } else {
-                s += "[CQ:" + this->type;
+                return s;
+            }
+            default: {
+                s += "[CQ:" + this->SegTypeName();
                 for (const auto &item : this->data) {
                     s += "," + item.first + "=" + escape(item.second, true);
                 }
                 s += "]";
+                return s;
             }
-            return s;
+            }
         }
 
         // 纯文本
         static MessageSegment text(const std::string &text) {
-            return {"text", {{"text", text}}};
+            return {SegTypes::text, {{"text", text}}};
         }
 
         // Emoji 表情
         static MessageSegment emoji(const uint32_t id) {
-            return {"emoji", {{"id", to_string(id)}}};
+            return {SegTypes::emoji, {{"id", to_string(id)}}};
         }
 
         // QQ 表情
         static MessageSegment face(const int id) {
-            return {"face", {{"id", to_string(id)}}};
+            return {SegTypes::face, {{"id", to_string(id)}}};
         }
 
         // 图片
         static MessageSegment image(const std::string &file) {
-            return {"image", {{"file", file}}};
+            return {SegTypes::image, {{"file", file}}};
         }
 
         // 语音
         static MessageSegment record(const std::string &file, const bool magic = false) {
-            return {"record", {{"file", file}, {"magic", to_string(magic)}}};
+            return {SegTypes::record, {{"file", file}, {"magic", to_string(magic)}}};
         }
 
         // @某人
         static MessageSegment at(const int64_t user_id) {
-            return {"at", {{"qq", to_string(user_id)}}};
+            return {SegTypes::at, {{"qq", to_string(user_id)}}};
         }
 
         // 猜拳魔法表情
         static MessageSegment rps() {
-            return {"rps", {}};
+            return {SegTypes::rps, {}};
         }
 
         // 掷骰子魔法表情
         static MessageSegment dice() {
-            return {"dice", {}};
+            return {SegTypes::dice, {}};
         }
 
         // 戳一戳
         static MessageSegment shake() {
-            return {"shake", {}};
+            return {SegTypes::shake, {}};
         }
 
         // 匿名发消息
         static MessageSegment anonymous(const bool ignore_failure = false) {
-            return {"anonymous", {{"ignore", to_string(ignore_failure)}}};
+            return {SegTypes::anonymous, {{"ignore", to_string(ignore_failure)}}};
         }
 
         // 链接分享
         static MessageSegment share(const std::string &url, const std::string &title, const std::string &content = "",
                                     const std::string &image_url = "") {
-            return {"share", {{"url", url}, {"title", title}, {"content", content}, {"image", image_url}}};
+            return {SegTypes::share, {{"url", url}, {"title", title}, {"content", content}, {"image", image_url}}};
         }
 
         enum class ContactType { USER, GROUP };
@@ -115,7 +136,7 @@ namespace cq::message {
         // 推荐好友, 推荐群
         static MessageSegment contact(const ContactType &type, const int64_t id) {
             return {
-                "contact",
+                SegTypes::contact,
                 {
                     {"type", type == ContactType::USER ? "qq" : "group"},
                     {"id", to_string(id)},
@@ -127,7 +148,7 @@ namespace cq::message {
         static MessageSegment location(const double latitude, const double longitude, const std::string &title = "",
                                        const std::string &content = "") {
             return {
-                "location",
+                SegTypes::location,
                 {
                     {"lat", to_string(latitude)},
                     {"lon", to_string(longitude)},
@@ -139,19 +160,19 @@ namespace cq::message {
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id) {
-            return {"music", {{"type", type}, {"id", to_string(id)}}};
+            return {SegTypes::music, {{"type", type}, {"id", to_string(id)}}};
         }
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id, const int32_t style) {
-            return {"music", {{"type", type}, {"id", to_string(id)}, {"style", to_string(style)}}};
+            return {SegTypes::music, {{"type", type}, {"id", to_string(id)}, {"style", to_string(style)}}};
         }
 
         // 音乐自定义分享
         static MessageSegment music(const std::string &url, const std::string &audio_url, const std::string &title,
                                     const std::string &content = "", const std::string &image_url = "") {
             return {
-                "music",
+                SegTypes::music,
                 {
                     {"type", "custom"},
                     {"url", url},
@@ -163,6 +184,12 @@ namespace cq::message {
             };
         }
     };
+
+    const ::std::unordered_map<::std::string, MessageSegment::SegTypes> SegTypeName2SegTypes = {
+#define MSG_SEG(val) {#val, MessageSegment::SegTypes::val},
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+        {"", MessageSegment::SegTypes::none}};
 
     struct Message : std::list<MessageSegment> {
         using std::list<MessageSegment>::list;
@@ -215,7 +242,12 @@ namespace cq::message {
                         eq_pos != std::string::npos ? std::string(param.begin() + eq_pos + 1, param.end()) : "");
                     param.clear();
                 }
-                this->push_back(MessageSegment{std::move(type), std::move(data)});
+                auto iter = SegTypeName2SegTypes.find(type);
+                if (iter != SegTypeName2SegTypes.end()) {
+                    this->push_back(MessageSegment{iter->second, std::move(data)});
+                } else {
+                    this->push_back(MessageSegment{MessageSegment::SegTypes::none, std::move(data)});
+                }
                 cq_code.clear();
                 temp_text.clear();
             };
@@ -287,7 +319,7 @@ namespace cq::message {
         std::string extract_plain_text() const {
             std::string result;
             for (const auto &seg : *this) {
-                if (seg.type == "text") {
+                if (seg.type == MessageSegment::SegTypes::text) {
                     result += seg.data.at("text") + " ";
                 }
             }
@@ -315,7 +347,8 @@ namespace cq::message {
 
             auto last_seg_it = this->begin();
             for (auto it = this->begin(); ++it != this->end();) {
-                if (it->type == "text" && last_seg_it->type == "text" && it->data.find("text") != it->data.end()
+                if (it->type == MessageSegment::SegTypes::text && last_seg_it->type == MessageSegment::SegTypes::text
+                    && it->data.find("text") != it->data.end()
                     && last_seg_it->data.find("text") != last_seg_it->data.end()) {
                     // found adjacent "text" segments
                     last_seg_it->data["text"] += it->data["text"];
@@ -327,7 +360,8 @@ namespace cq::message {
                 }
             }
 
-            if (this->size() == 1 && this->front().type == "text" && this->extract_plain_text().empty()) {
+            if (this->size() == 1 && this->front().type == MessageSegment::SegTypes::text
+                && this->extract_plain_text().empty()) {
                 this->clear(); // the only item is an empty text segment, we should remove it
             }
         }
