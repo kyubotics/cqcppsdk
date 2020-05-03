@@ -31,6 +31,8 @@ namespace cq::message {
         return res;
     }
 
+    class Message;
+
     // 消息段 (即 CQ 码)
     class MessageSegment {
     public:
@@ -41,6 +43,7 @@ namespace cq::message {
             unimpl
         };
 
+    private:
         inline static constexpr char *const SegTypesName[] = {
 #define MSG_SEG(val) #val,
 #include "./message_segment_types.inc"
@@ -53,69 +56,140 @@ namespace cq::message {
 #undef MSG_SEG
             {"", MessageSegment::SegTypes::unimpl}};
 
-    private:
         using value_type = std::string;
         using map_type = std::map<value_type, value_type>;
         using variant_type = ::std::variant<value_type, map_type>;
 
         // 消息段类型 (即 CQ 码的功能名)
-        SegTypes _type = SegTypes::unimpl;
+        SegTypes _type;
 
         // 当type为text和unimpl时，data为字符串
         // text为直接文本数据，unimpl为CQ码原文
         // 其他情况中，消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
         variant_type data;
 
+        // 构造支持的键值对数据段
         explicit MessageSegment(SegTypes t, map_type in_map) noexcept {
             this->_type = t;
             data = std::move(in_map);
         }
 
+        // 构造支持的字符串数据段，仅有text
         explicit MessageSegment(SegTypes t, value_type in_string) noexcept {
             this->_type = t;
             data = std::move(in_string);
         }
 
+        // 构造仅有type的段
         explicit MessageSegment(SegTypes t) noexcept {
             this->_type = t;
             data = map_type();
         }
 
+        // 构造不支持的段
         explicit MessageSegment(value_type in_string) noexcept {
             this->_type = SegTypes::unimpl;
             data = std::move(in_string);
         }
 
-        inline void forward_variant(variant_type &&val) {
-            switch (this->_type) {
-            case SegTypes::text:
-            case SegTypes::unimpl:
-                this->data = ::std::get<value_type>(::std::move(val));
-                break;
-            default:
-                this->data = ::std::get<map_type>(::std::move(val));
+        friend Message;
+
+        inline static bool testCQCode(const ::std::string &src) noexcept {
+            constexpr char CQ_head[] = "[CQ:";
+            constexpr char CQ_end = ']';
+            if (src.size() <= sizeof(CQ_head) + sizeof(CQ_end)) return false;
+            for (size_t i = 0; !CQ_head[i]; i++)
+                if (src[i] != CQ_head[i]) return false;
+            if (src.back() != CQ_end) return false;
+            auto cursor = src.begin();
+            auto expect = [&](char delim) -> bool {
+                cursor = ::std::find(cursor, src.end(), delim);
+                return cursor != src.end();
+            };
+            while (!expect(',')) {
+                if (!expect('=')) return false;
             }
+            return true;
         }
 
-        inline void forward_variant(const variant_type &val) {
-            this->forward_variant(variant_type(val));
+        // 从cq码创建segment，会报错
+        // MessageSegment总是对自身内部数据保证所有权，所以按值传参
+        static MessageSegment fromCQCodeNoCheck(::std::string cq_code) noexcept(false) {
+            auto find_char = [&](auto from, auto val) -> auto {
+                return ::std::find(from, cq_code.end(), val);
+            };
+
+            auto rfind_char = [&](auto from, auto val) -> auto {
+                return ::std::find(from, cq_code.rend(), val);
+            };
+
+            auto is_end = [&](auto iter) -> bool { return iter == cq_code.end(); };
+
+#define DECQCODE_ASSERT(test)                                         \
+    {                                                                 \
+        if (!(test)) throw ::std::invalid_argument("Invalid CQCode"); \
+    }
+            DECQCODE_ASSERT(cq_code.front() == '[')
+            DECQCODE_ASSERT(cq_code.back() == ']');
+
+            auto the_colon_after_CQ = find_char(cq_code.begin(), ':');
+            DECQCODE_ASSERT(the_colon_after_CQ != cq_code.end());
+
+            auto rbracket_pos = ::std::prev(cq_code.end());
+
+            auto the_first_comma = find_char(the_colon_after_CQ, ',');
+            ::std::string type;
+            if (is_end(the_first_comma)) {
+                ::std::string(::std::next(the_colon_after_CQ), rbracket_pos);
+            } else {
+                type = ::std::string(::std::next(the_colon_after_CQ), the_first_comma);
+            }
+
+            auto type_iter = SegTypeName2SegTypes.find(type);
+            if (type_iter == SegTypeName2SegTypes.end()) {
+                return MessageSegment(::std::move(cq_code));
+            } else {
+                auto pos = the_first_comma;
+                map_type temp_data;
+                while (pos != cq_code.end()) {
+                    auto equal_pos = find_char(pos, '=');
+                    _ASSERT(equal_pos != cq_code.end());
+                    auto comma_pos = find_char(equal_pos, ',');
+                    if (is_end(comma_pos)) {
+                        temp_data.insert({std::string(::std::next(pos), equal_pos),
+                                          std::string(::std::next(equal_pos), ::std::prev(cq_code.end()))});
+                    } else {
+                        temp_data.insert({std::string(::std::next(pos), equal_pos),
+                                          std::string(::std::next(equal_pos), ::std::next(rbracket_pos))});
+                        break;
+                    }
+                    pos = comma_pos;
+                }
+                return MessageSegment(type_iter->second, ::std::move(temp_data));
+            }
+#undef DECQCODE_ASSERT
         }
 
     public:
+        MessageSegment() noexcept {
+            this->_type = SegTypes::unimpl;
+        }
         MessageSegment(MessageSegment &&val) noexcept {
-            *this = ::std::move(val);
+            this->_type = val._type;
+            this->data = ::std::move(val.data);
         }
         MessageSegment(const MessageSegment &val) noexcept {
-            *this = val;
+            this->_type = val._type;
+            this->data = val.data;
         }
         MessageSegment &operator=(MessageSegment &&val) noexcept {
             this->_type = val._type;
-            this->forward_variant(::std::forward<variant_type>(val.data));
+            this->data = ::std::move(val.data);
             return *this;
         }
         MessageSegment &operator=(const MessageSegment &val) noexcept {
             this->_type = val._type;
-            this->forward_variant(val.data);
+            this->data = val.data;
             return *this;
         }
 
@@ -130,57 +204,20 @@ namespace cq::message {
             return SegTypesName[static_cast<size_t>(this->_type)];
         }
 
+        // 提供==语义
+        inline bool operator==(const MessageSegment &other) const noexcept {
+            return this->type() == other.type() && this->data == other.data;
+        }
+
+        // 提供!=语义
+        inline bool operator!=(const MessageSegment &other) const noexcept {
+            return !this->operator==(other);
+        }
+
         // 从cq码创建segment
         static MessageSegment fromCQCode(std::string cq_code) {
-            auto find_char = [&](auto from, auto val) -> auto {
-                return ::std::find(from, cq_code.end(), val);
-            };
-
-            auto rfind_char = [&](auto val) -> auto {
-                return ::std::find(cq_code.rbegin(), cq_code.rend(), val);
-            };
-
-            auto is_end = [&](auto iter) -> bool { return iter == cq_code.end(); };
-
-            {
-                auto where_lbra = find_char(cq_code.begin(), '[');
-                cq_code.erase(cq_code.begin(), where_lbra);
-
-                auto rwhere_rbra = ::std::find(cq_code.rbegin(), cq_code.rend(), ']');
-                if (rwhere_rbra == cq_code.rend()) throw ::std::invalid_argument("Invalid CQCode");
-
-                auto where_rbra = rwhere_rbra.base();
-                if (!is_end(where_rbra)) cq_code.erase(where_rbra, cq_code.end());
-            }
-
-            auto the_colon_after_CQ = find_char(cq_code.begin(), ':');
-            if (is_end(the_colon_after_CQ)) throw ::std::invalid_argument("Invalid CQCode");
-
-            auto the_first_comma = find_char(the_colon_after_CQ, ',');
-
-            ::std::string type = is_end(the_first_comma)
-                                     ? ::std::string(::std::next(the_colon_after_CQ), cq_code.end() - 2)
-                                     : ::std::string(::std::next(the_colon_after_CQ), the_first_comma);
-            auto type_iter = SegTypeName2SegTypes.find(type);
-            if (type_iter == SegTypeName2SegTypes.end()) {
-                return MessageSegment(::std::move(cq_code));
-            } else {
-                auto pos = the_first_comma;
-                map_type temp_data;
-                while (pos != cq_code.end()) {
-                    auto equal_pos = find_char(pos, '=');
-                    auto comma_pos = find_char(equal_pos, ',');
-                    if (is_end(comma_pos)) {
-                        temp_data.insert({std::string(::std::next(pos), equal_pos),
-                                          std::string(::std::next(equal_pos), ::std::prev(cq_code.end()))});
-                    } else {
-                        temp_data.insert({std::string(::std::next(pos), equal_pos),
-                                          std::string(::std::next(equal_pos), ::std::next(comma_pos))});
-                    }
-                    pos = comma_pos;
-                }
-                return MessageSegment(type_iter->second, ::std::move(temp_data));
-            }
+            if (!testCQCode(cq_code)) return MessageSegment();
+            return MessageSegment::fromCQCodeNoCheck(cq_code);
         }
 
         // 转换为字符串形式
@@ -321,54 +358,72 @@ namespace cq::message {
         }
     }; // namespace cq::message
 
-    struct Message : std::list<MessageSegment> {
-        using std::list<MessageSegment>::list;
+    class Message : public std::list<MessageSegment> {
+    private:
+        using container_type = std::list<MessageSegment>;
+
+        inline static MessageSegment fromCQCodeNoCheck(const ::std::string &cq_code) {
+            return MessageSegment::fromCQCodeNoCheck(cq_code);
+        }
+
+    public:
+        Message() noexcept {};
 
         // 将 C 字符串形式的消息转换为 Message 对象
         Message(const char *msg_str) : Message(std::string(msg_str)) {
         }
 
         // 将字符串形式的消息转换为 Message 对象
+        // 如果字符串中CQ码不符合规范，会抛出invalid_argument，此时构造的Message中无元素
         Message(const std::string &msg_str) {
             using cq::utils::string_trim;
 
             const ::std::string CQ_head = "[CQ:";
 
-            // 不属于CQ码的"["和"]"在CQ信息中总是会escape为"&#91"和"&#93"，算是好处理的地方
-            auto search_cq_head = [&](auto from) -> auto {
-                return ::std::search(from, msg_str.end(), CQ_head.begin(), CQ_head.end());
-            };
-            auto find_cq_tail = [&](auto from) -> auto {
-                return ::std::find(from, msg_str.end(), ']');
+            auto find_char = [&](auto from, char delim) -> auto {
+                return ::std::find(from, msg_str.end(), delim);
             };
             auto is_end = [&](auto iter) -> bool { return iter == msg_str.end(); };
 
+            container_type cont;
             auto work_pos = msg_str.begin();
             while (!is_end(work_pos)) {
-                auto cq_head_pos = search_cq_head(work_pos);
+                // 不属于CQ码的"["和"]"在CQ信息中总是会escape为"&#91"和"&#93"，算是好处理的地方
+                auto cq_head_pos = find_char(work_pos, '[');
                 if (is_end(cq_head_pos)) {
-                    this->push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
+                    cont.push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
                     break;
                 } else {
                     if (::std::distance(work_pos, cq_head_pos) > 0)
-                        this->push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
-                    auto cq_tail_pos = find_cq_tail(cq_head_pos);
-                    this->push_back(MessageSegment::fromCQCode(::std::string(cq_head_pos, cq_tail_pos + 1)));
-                    work_pos = ::std::next(cq_tail_pos);
+                        cont.push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
+
+                    // 由于可以从用户指定的字符串构建，所以有可能先遇到'['
+                    auto cq_tail_pos = ::std::find_if(
+                        ::std::next(cq_head_pos), msg_str.end(), [&](char w) -> bool { return w == '[' || w == ']'; });
+
+                    if (!is_end(cq_tail_pos) && *cq_tail_pos == ']') cq_tail_pos = ::std::next(cq_tail_pos);
+
+                    // 如果先遇到'['，会发生异常，Message会保持空容器
+                    cont.push_back(MessageSegment::fromCQCodeNoCheck(::std::string(cq_head_pos, cq_tail_pos)));
+                    work_pos = cq_tail_pos;
                 }
             }
+            // fromCQCodeNoCheck可能抛出，使用swap来保证强异常安全
+            this->swap(cont);
         }
 
         // 将消息段转换为 Message 对象
-        Message(const MessageSegment &seg) {
-            this->push_back(seg);
+        Message(MessageSegment seg) {
+            this->push_back(::std::move(seg));
         }
 
         // 将 Message 对象转换为字符串形式的消息
-        operator std::string() const {
-            return std::accumulate(this->begin(), this->end(), std::string(), [](const auto &seg1, const auto &seg2) {
-                return std::string(seg1) + std::string(seg2);
-            });
+        operator std::string() const noexcept {
+            ::std::ostringstream oss;
+            for (auto &seg : *this) {
+                oss << ::std::string(seg);
+            }
+            return oss.str();
         }
 
         // 向指定主体发送消息
@@ -422,64 +477,50 @@ namespace cq::message {
             }
         }
 
-        Message &operator+=(const Message &other) {
+        // 连接另一个Message
+        inline Message &operator+=(Message other) {
             auto start = other.begin();
             if (!this->empty() && !other.empty() && this->back().type() == other.front().type()
                 && this->back().type() == MessageSegment::SegTypes::text) {
                 this->back() = MessageSegment::text(this->back().plain_text() + other.front().plain_text());
                 ::std::advance(start, 1);
             }
-            this->insert(this->end(), start, other.end());
+            this->splice(this->end(), other, start, other.end());
             return *this;
         }
 
-        template <typename Tx,
-                  typename ::std::enable_if_t<::std::is_same_v<::std::decay_t<Tx>, MessageSegment>, int> = 0>
-        Message &operator+=(Tx &&segment) {
-            return this->push_back(::std::forward(segment));
+        // 连接另一个MessageSegment
+        inline Message &operator+=(MessageSegment segment) {
+            this->push_back(::std::move(segment));
+            return *this;
         }
 
-        Message operator+(const Message &other) const {
-            auto result = *this;
-            result += other; // use operator+=
-            return result;
+        // 提供==语义
+        inline bool operator==(const Message &rhs) {
+            if (this->size() != rhs.size()) return false;
+            auto lhs_iter = this->begin();
+            auto rhs_iter = rhs.begin();
+            while (lhs_iter != this->end() && rhs_iter != rhs.end()) {
+                if (*lhs_iter != *rhs_iter) return false;
+                ::std::advance(lhs_iter, 1);
+                ::std::advance(rhs_iter, 1);
+            }
+            return true;
+        }
+
+        // 提供!=语义
+        inline bool operator!=(const Message &rhs) {
+            return !this->operator==(rhs);
         }
     };
 
-    template <
-        typename T, typename Tx,
-        typename ::std::enable_if_t<::std::is_convertible_v<T, Message> && !::std::is_same_v<T, Message>, int> = 0,
-        typename ::std::enable_if_t<::std::is_same_v<::std::decay_t<Tx>, MessageSegment>, int> = 0>
-    inline Message operator+(const T &lhs, Tx &&rhs) {
-        return Message(lhs) + ::std::forward<MessageSegment>(rhs);
+    // 提供任何能转换到Message的对象和MessageSegment之间的连接运算
+    inline Message operator+(Message lhs, MessageSegment rhs) {
+        return lhs += ::std::move(rhs);
     }
 
-    template <typename T, typename Tx,
-              typename ::std::enable_if_t<::std::is_same_v<::std::decay_t<Tx>, MessageSegment>, int> = 0>
-    inline Message operator+(Tx &&lhs, const T &rhs) {
-        return Message(::std::forward<MessageSegment>(lhs)) + rhs;
-    }
-
-    inline bool operator==(const MessageSegment &lhs, const MessageSegment &rhs) {
-        return lhs.type() == rhs.type() && ::std::string(lhs) == ::std::string(rhs);
-    }
-
-    inline bool operator!=(const MessageSegment &lhs, const MessageSegment &rhs) {
-        return !(lhs == rhs);
-    }
-
-    inline bool operator==(const Message &lhs, const Message &rhs) {
-        if (lhs.size() != rhs.size()) return false;
-        auto lhs_iter = lhs.begin();
-        auto rhs_iter = rhs.begin();
-        while (lhs_iter != lhs.end() && rhs_iter != rhs.end()) {
-            if (*lhs_iter != *rhs_iter) return false;
-            ::std::advance(lhs_iter, 1);
-            ::std::advance(rhs_iter, 1);
-        }
-        return true;
-    }
-    inline bool operator!=(const Message &lhs, const Message &rhs) {
-        return !(lhs == rhs);
+    // 提供任何能转换到Message的对象和Message之间的连接运算
+    inline Message operator+(Message lhs, Message rhs) {
+        return lhs += ::std::move(rhs);
     }
 } // namespace cq::message
