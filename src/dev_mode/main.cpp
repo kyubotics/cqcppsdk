@@ -9,11 +9,7 @@
 #include "../core/init.hpp"
 #include "../utils/function.hpp"
 
-#if defined(WIN32) && !(defined(__GNUC__) || defined(__MINGW32__))
-#define WIN32_NO_MINGW
-#endif
-
-#ifdef WIN32_NO_MINGW
+#ifdef WIN32
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -53,7 +49,7 @@ static unsigned old_code_page;
 static void exit_callback() {
     call_all(cq::_coolq_exit_callbacks());
 
-#ifdef WIN32_NO_MINGW
+#ifdef WIN32
     // 恢复控制台代码页
     SetConsoleCP(old_code_page);
     SetConsoleOutputCP(old_code_page);
@@ -65,7 +61,7 @@ static void sig_handler(int) {
 }
 
 int main() {
-#ifdef WIN32_NO_MINGW
+#ifdef WIN32
     // 保存当前控制台代码页
     old_code_page = GetConsoleCP();
     // 设置控制台代码页为 UTF-8
@@ -84,7 +80,7 @@ int main() {
 
     signal(SIGINT, sig_handler);
 
-#ifdef WIN32_NO_MINGW
+#ifdef WIN32
     wstring line;
     prompt();
     while (getline(wcin, line)) {
