@@ -8,9 +8,8 @@ namespace cq::dir {
     namespace fs = std::filesystem;
 
     inline bool create_dir_if_not_exists(const std::string &dir) {
-        const auto w_dir = cq::utils::s2ws(dir);
-        if (!fs::exists(w_dir)) {
-            return fs::create_directories(w_dir);
+        if (const auto p = fs::u8path(dir); !fs::exists(p)) {
+            return fs::create_directories(p);
         }
         return true;
     }
@@ -21,8 +20,8 @@ namespace cq::dir {
      */
     template <typename... S>
     inline std::string root(const S &... sub_paths) {
-        auto p = fs::path(cq::get_coolq_root_directory());
-        (p.append(sub_paths), ...);
+        auto p = fs::u8path(cq::get_coolq_root_directory());
+        (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
         return p.string();
     }
@@ -33,8 +32,8 @@ namespace cq::dir {
      */
     template <typename... S>
     inline std::string app(const S &... sub_paths) {
-        auto p = fs::path(cq::get_app_directory());
-        (p.append(sub_paths), ...);
+        auto p = fs::u8path(cq::get_app_directory());
+        (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
         create_dir_if_not_exists(p.string());
         return p.string();
@@ -46,8 +45,8 @@ namespace cq::dir {
      */
     template <typename... S>
     inline std::string app_per_account(const S &... sub_paths) {
-        auto p = fs::path(app(to_string(cq::get_login_user_id())));
-        (p.append(sub_paths), ...);
+        auto p = fs::u8path(app(to_string(cq::get_login_user_id())));
+        (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
         create_dir_if_not_exists(p.string());
         return p.string();
