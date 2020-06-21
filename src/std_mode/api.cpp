@@ -5,7 +5,9 @@
 #include "../core/api.hpp"
 #include "../core/init.hpp"
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 using std::enable_if_t;
