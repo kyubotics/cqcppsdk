@@ -7,11 +7,15 @@
 namespace cq::dir {
     namespace fs = std::filesystem;
 
-    inline bool create_dir_if_not_exists(const std::string &dir) {
-        if (const auto p = fs::u8path(dir); !fs::exists(p)) {
-            return fs::create_directories(p);
+    inline bool create_dir_if_not_exists(const fs::path &dir) {
+        if (!fs::exists(dir)) {
+            return fs::create_directories(dir);
         }
         return true;
+    }
+
+    inline bool create_dir_if_not_exists(const std::string &dir) {
+        return create_dir_if_not_exists(fs::u8path(dir));
     }
 
     /**
@@ -23,7 +27,7 @@ namespace cq::dir {
         auto p = fs::u8path(cq::get_coolq_root_directory());
         (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
-        return p.string();
+        return p.u8string();
     }
 
     /**
@@ -35,8 +39,8 @@ namespace cq::dir {
         auto p = fs::u8path(cq::get_app_directory());
         (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
-        create_dir_if_not_exists(p.string());
-        return p.string();
+        create_dir_if_not_exists(p);
+        return p.u8string();
     }
 
     /**
@@ -48,7 +52,7 @@ namespace cq::dir {
         auto p = fs::u8path(app(to_string(cq::get_login_user_id())));
         (p.append(utils::s2ws(sub_paths)), ...);
         p /= ""; // ensure the trailing sep
-        create_dir_if_not_exists(p.string());
-        return p.string();
+        create_dir_if_not_exists(p);
+        return p.u8string();
     }
 } // namespace cq::dir

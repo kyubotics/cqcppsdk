@@ -204,15 +204,15 @@ namespace cq {
     std::string get_app_directory() {
         print_api_call("get_app_directory");
         const auto app_dir = fs::u8path(get_coolq_root_directory()) / "data" / "app" / "";
-        dir::create_dir_if_not_exists(app_dir.string());
-        return app_dir.string();
+        dir::create_dir_if_not_exists(app_dir.u8string());
+        return app_dir.u8string();
     }
 
     std::string get_coolq_root_directory() {
         print_api_call("get_coolq_root_directory");
         string root_dir = FAKE_COOLQ_ROOT_DIR;
         dir::create_dir_if_not_exists(root_dir);
-        return fs::absolute(fs::u8path(root_dir)).string();
+        return fs::absolute(fs::u8path(root_dir)).u8string();
     }
 
     std::string get_image(const std::string &file) {
