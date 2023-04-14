@@ -14,3 +14,6 @@ cq_add_test(test_dolores
         test_dolores_watashi.cpp
         test_dolores_traits.cpp
         test_dolores_handler.cpp)
+
+cq_add_test(test_sdk
+        test_sdk_message.cpp)

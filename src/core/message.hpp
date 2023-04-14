@@ -4,6 +4,8 @@
 
 #include "api.hpp"
 
+#include <variant>
+
 namespace cq::message {
     // 对字符串做 CQ 码转义
     inline std::string escape(const std::string &str, const bool escape_comma = true) {
@@ -29,253 +31,399 @@ namespace cq::message {
         return res;
     }
 
+    class Message;
+
     // 消息段 (即 CQ 码)
-    struct MessageSegment {
-        std::string type; // 消息段类型 (即 CQ 码的功能名)
-        std::map<std::string, std::string> data; // 消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
+    class MessageSegment {
+    public:
+        enum class SegTypes {
+#define MSG_SEG(val) val,
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+            unimpl
+        };
+
+    private:
+        inline static constexpr char *const SegTypesName[] = {
+#define MSG_SEG(val) #val,
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+            ""};
+
+        inline static const ::std::unordered_map<::std::string, MessageSegment::SegTypes> SegTypeName2SegTypes = {
+#define MSG_SEG(val) {#val, MessageSegment::SegTypes::val},
+#include "./message_segment_types.inc"
+#undef MSG_SEG
+            {"", MessageSegment::SegTypes::unimpl}};
+
+        using value_type = std::string;
+        using map_type = std::map<value_type, value_type>;
+        using variant_type = ::std::variant<value_type, map_type>;
+
+        // 消息段类型 (即 CQ 码的功能名)
+        SegTypes _type;
+
+        // 当type为text和unimpl时，data为字符串
+        // text为直接文本数据，unimpl为CQ码原文
+        // 其他情况中，消息段数据 (即 CQ 码参数), 字符串全部使用未经 CQ 码转义的原始文本
+        variant_type data;
+
+        // 构造支持的键值对数据段
+        explicit MessageSegment(SegTypes t, map_type in_map) noexcept {
+            this->_type = t;
+            data = std::move(in_map);
+        }
+
+        // 构造支持的字符串数据段，仅有text
+        explicit MessageSegment(SegTypes t, value_type in_string) noexcept {
+            this->_type = t;
+            data = std::move(in_string);
+        }
+
+        // 构造仅有type的段
+        explicit MessageSegment(SegTypes t) noexcept {
+            this->_type = t;
+            data = map_type();
+        }
+
+        // 构造不支持的段
+        explicit MessageSegment(value_type in_string) noexcept {
+            this->_type = SegTypes::unimpl;
+            data = std::move(in_string);
+        }
+
+        friend Message;
+
+        inline static bool testCQCode(const ::std::string &src) noexcept {
+            constexpr char CQ_head[] = "[CQ:";
+            constexpr char CQ_end = ']';
+            if (src.size() <= sizeof(CQ_head) + sizeof(CQ_end)) return false;
+            for (size_t i = 0; !CQ_head[i]; i++)
+                if (src[i] != CQ_head[i]) return false;
+            if (src.back() != CQ_end) return false;
+            auto cursor = src.begin();
+            auto expect = [&](char delim) -> bool {
+                cursor = ::std::find(cursor, src.end(), delim);
+                return cursor != src.end();
+            };
+            while (!expect(',')) {
+                if (!expect('=')) return false;
+            }
+            return true;
+        }
+
+        // 从cq码创建segment，会报错
+        // MessageSegment总是对自身内部数据保证所有权，所以按值传参
+        static MessageSegment fromCQCodeNoCheck(::std::string cq_code) noexcept(false) {
+            auto find_char = [&](auto from, auto val) -> auto {
+                return ::std::find(from, cq_code.end(), val);
+            };
+
+            auto rfind_char = [&](auto from, auto val) -> auto {
+                return ::std::find(from, cq_code.rend(), val);
+            };
+
+            auto is_end = [&](auto iter) -> bool { return iter == cq_code.end(); };
+
+#define DECQCODE_ASSERT(test)                                         \
+    {                                                                 \
+        if (!(test)) throw ::std::invalid_argument("Invalid CQCode"); \
+    }
+            DECQCODE_ASSERT(cq_code.front() == '[')
+            DECQCODE_ASSERT(cq_code.back() == ']');
+
+            auto the_colon_after_CQ = find_char(cq_code.begin(), ':');
+            DECQCODE_ASSERT(the_colon_after_CQ != cq_code.end());
+
+            auto rbracket_pos = ::std::prev(cq_code.end());
+
+            auto the_first_comma = find_char(the_colon_after_CQ, ',');
+            ::std::string type;
+            if (is_end(the_first_comma)) {
+                ::std::string(::std::next(the_colon_after_CQ), rbracket_pos);
+            } else {
+                type = ::std::string(::std::next(the_colon_after_CQ), the_first_comma);
+            }
+
+            auto type_iter = SegTypeName2SegTypes.find(type);
+            if (type_iter == SegTypeName2SegTypes.end()) {
+                return MessageSegment(::std::move(cq_code));
+            } else {
+                auto pos = the_first_comma;
+                map_type temp_data;
+                while (pos != cq_code.end()) {
+                    auto equal_pos = find_char(pos, '=');
+                    _ASSERT(equal_pos != cq_code.end());
+                    auto comma_pos = find_char(equal_pos, ',');
+                    if (is_end(comma_pos)) {
+                        temp_data.insert({std::string(::std::next(pos), equal_pos),
+                                          std::string(::std::next(equal_pos), ::std::prev(cq_code.end()))});
+                    } else {
+                        temp_data.insert({std::string(::std::next(pos), equal_pos),
+                                          std::string(::std::next(equal_pos), ::std::next(rbracket_pos))});
+                        break;
+                    }
+                    pos = comma_pos;
+                }
+                return MessageSegment(type_iter->second, ::std::move(temp_data));
+            }
+#undef DECQCODE_ASSERT
+        }
+
+    public:
+        MessageSegment() noexcept {
+            this->_type = SegTypes::unimpl;
+        }
+        MessageSegment(MessageSegment &&val) noexcept {
+            this->_type = val._type;
+            this->data = ::std::move(val.data);
+        }
+        MessageSegment(const MessageSegment &val) noexcept {
+            this->_type = val._type;
+            this->data = val.data;
+        }
+        MessageSegment &operator=(MessageSegment &&val) noexcept {
+            this->_type = val._type;
+            this->data = ::std::move(val.data);
+            return *this;
+        }
+        MessageSegment &operator=(const MessageSegment &val) noexcept {
+            this->_type = val._type;
+            this->data = val.data;
+            return *this;
+        }
+
+        // 获得segment的类型，unimpl类型表示该CQ码在sdk中未提供构造方法
+        // 其他类型均有提供对应的构造方法，例如MessageSegment::SegTypes::face对应有MessageSegment::face方法
+        inline SegTypes type() const {
+            return this->_type;
+        }
+
+        // 获得segment的类型对应的字符串
+        std::string segTypeName() const {
+            return SegTypesName[static_cast<size_t>(this->_type)];
+        }
+
+        // 提供==语义
+        inline bool operator==(const MessageSegment &other) const noexcept {
+            return this->type() == other.type() && this->data == other.data;
+        }
+
+        // 提供!=语义
+        inline bool operator!=(const MessageSegment &other) const noexcept {
+            return !this->operator==(other);
+        }
+
+        // 从cq码创建segment
+        static MessageSegment fromCQCode(std::string cq_code) {
+            if (!testCQCode(cq_code)) return MessageSegment();
+            return MessageSegment::fromCQCodeNoCheck(cq_code);
+        }
 
         // 转换为字符串形式
         operator std::string() const {
             std::string s;
-            if (this->type.empty()) {
-                return s;
+            switch (this->_type) {
+            case SegTypes::text:
+            case SegTypes::unimpl: {
+                return ::std::get<value_type>(this->data);
             }
-            if (this->type == "text") {
-                if (const auto it = this->data.find("text"); it != this->data.end()) {
-                    s += escape((*it).second, false);
-                }
-            } else {
-                s += "[CQ:" + this->type;
-                for (const auto &item : this->data) {
+            default: {
+                auto &data_map = ::std::get<map_type>(this->data);
+                s += "[CQ:" + this->segTypeName();
+                for (const auto &item : data_map) {
                     s += "," + item.first + "=" + escape(item.second, true);
                 }
                 s += "]";
+                return s;
             }
-            return s;
+            }
+        }
+
+        // 获得MessageSegment中的键值对，对于text和unimpl的Segment将抛出错误
+        // 只提供返回常量引用，需要不同的内容应当另外构造
+        inline const map_type &value_map() const {
+            return ::std::get<map_type>(this->data);
+        }
+
+        // 获得MessageSegment中的文本，对于非text且非unimpl的Segment将抛出错误
+        // 只提供返回常量引用，需要不同的内容应当另外构造
+        inline const value_type &plain_text() const {
+            return ::std::get<value_type>(this->data);
         }
 
         // 纯文本
         static MessageSegment text(const std::string &text) {
-            return {"text", {{"text", text}}};
+            return MessageSegment(SegTypes::text, text);
         }
 
         // Emoji 表情
         static MessageSegment emoji(const uint32_t id) {
-            return {"emoji", {{"id", to_string(id)}}};
+            return MessageSegment(SegTypes::emoji, {{"id", to_string(id)}});
         }
 
         // QQ 表情
         static MessageSegment face(const int id) {
-            return {"face", {{"id", to_string(id)}}};
+            return MessageSegment(SegTypes::face, {{"id", to_string(id)}});
         }
 
         // 图片
         static MessageSegment image(const std::string &file) {
-            return {"image", {{"file", file}}};
+            return MessageSegment(SegTypes::image, {{"file", file}});
         }
 
         // 语音
         static MessageSegment record(const std::string &file, const bool magic = false) {
-            return {"record", {{"file", file}, {"magic", to_string(magic)}}};
+            return MessageSegment(SegTypes::record, {{"file", file}, {"magic", to_string(magic)}});
         }
 
         // @某人
         static MessageSegment at(const int64_t user_id) {
-            return {"at", {{"qq", to_string(user_id)}}};
+            return MessageSegment(SegTypes::at, {{"qq", to_string(user_id)}});
         }
 
         // 猜拳魔法表情
         static MessageSegment rps() {
-            return {"rps", {}};
+            return MessageSegment(SegTypes::rps);
         }
 
         // 掷骰子魔法表情
         static MessageSegment dice() {
-            return {"dice", {}};
+            return MessageSegment(SegTypes::dice);
         }
 
         // 戳一戳
         static MessageSegment shake() {
-            return {"shake", {}};
+            return MessageSegment(SegTypes::shake);
         }
 
         // 匿名发消息
         static MessageSegment anonymous(const bool ignore_failure = false) {
-            return {"anonymous", {{"ignore", to_string(ignore_failure)}}};
+            return MessageSegment(SegTypes::anonymous, {{"ignore", to_string(ignore_failure)}});
         }
 
         // 链接分享
         static MessageSegment share(const std::string &url, const std::string &title, const std::string &content = "",
                                     const std::string &image_url = "") {
-            return {"share", {{"url", url}, {"title", title}, {"content", content}, {"image", image_url}}};
+            return MessageSegment(SegTypes::share,
+                                  {{"url", url}, {"title", title}, {"content", content}, {"image", image_url}});
         }
 
         enum class ContactType { USER, GROUP };
 
         // 推荐好友, 推荐群
         static MessageSegment contact(const ContactType &type, const int64_t id) {
-            return {
-                "contact",
-                {
-                    {"type", type == ContactType::USER ? "qq" : "group"},
-                    {"id", to_string(id)},
-                },
-            };
+            return MessageSegment(SegTypes::contact,
+                                  {
+                                      {"type", type == ContactType::USER ? "qq" : "group"},
+                                      {"id", to_string(id)},
+                                  });
         }
 
         // 位置
         static MessageSegment location(const double latitude, const double longitude, const std::string &title = "",
                                        const std::string &content = "") {
-            return {
-                "location",
-                {
-                    {"lat", to_string(latitude)},
-                    {"lon", to_string(longitude)},
-                    {"title", title},
-                    {"content", content},
-                },
-            };
+            return MessageSegment(SegTypes::location,
+                                  {
+                                      {"lat", to_string(latitude)},
+                                      {"lon", to_string(longitude)},
+                                      {"title", title},
+                                      {"content", content},
+                                  });
         }
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id) {
-            return {"music", {{"type", type}, {"id", to_string(id)}}};
+            return MessageSegment(SegTypes::music, {{"type", type}, {"id", to_string(id)}});
         }
 
         // 音乐
         static MessageSegment music(const std::string &type, const int64_t id, const int32_t style) {
-            return {"music", {{"type", type}, {"id", to_string(id)}, {"style", to_string(style)}}};
+            return MessageSegment(SegTypes::music,
+                                  {{"type", type}, {"id", to_string(id)}, {"style", to_string(style)}});
         }
 
         // 音乐自定义分享
         static MessageSegment music(const std::string &url, const std::string &audio_url, const std::string &title,
                                     const std::string &content = "", const std::string &image_url = "") {
-            return {
-                "music",
-                {
-                    {"type", "custom"},
-                    {"url", url},
-                    {"audio", audio_url},
-                    {"title", title},
-                    {"content", content},
-                    {"image", image_url},
-                },
-            };
+            return MessageSegment(SegTypes::music,
+                                  {
+                                      {"type", "custom"},
+                                      {"url", url},
+                                      {"audio", audio_url},
+                                      {"title", title},
+                                      {"content", content},
+                                      {"image", image_url},
+                                  });
         }
-    };
+    }; // namespace cq::message
 
-    struct Message : std::list<MessageSegment> {
-        using std::list<MessageSegment>::list;
+    class Message : public std::list<MessageSegment> {
+    private:
+        using container_type = std::list<MessageSegment>;
+
+        inline static MessageSegment fromCQCodeNoCheck(const ::std::string &cq_code) {
+            return MessageSegment::fromCQCodeNoCheck(cq_code);
+        }
+
+    public:
+        Message() noexcept {};
 
         // 将 C 字符串形式的消息转换为 Message 对象
         Message(const char *msg_str) : Message(std::string(msg_str)) {
         }
 
         // 将字符串形式的消息转换为 Message 对象
+        // 如果字符串中CQ码不符合规范，会抛出invalid_argument，此时构造的Message中无元素
         Message(const std::string &msg_str) {
             using cq::utils::string_trim;
 
-            // 定义字符流操作
-            size_t idx = 0;
-            const auto has_next = [&] { return idx < msg_str.length(); };
-            const auto next = [&] { return msg_str[idx++]; };
-            const auto move_rel = [&](const size_t rel_steps = 0) { idx += rel_steps; };
-            const auto peek = [&] { return msg_str[idx]; };
-            const auto peek_n = [&](const size_t count = 1) {
-                return msg_str.substr(idx, std::min(count, msg_str.length() - idx));
+            const ::std::string CQ_head = "[CQ:";
+
+            auto find_char = [&](auto from, char delim) -> auto {
+                return ::std::find(from, msg_str.end(), delim);
             };
+            auto is_end = [&](auto iter) -> bool { return iter == msg_str.end(); };
 
-            // 判断当前位置是否 CQ 码开头
-            const auto is_cq_code_begin = [&](const char ch) { return ch == '[' && peek_n(3) == "CQ:"; };
-
-            // 定义状态
-            enum { S0, S1 } state = S0;
-
-            std::string temp_text; // 暂存以后可能作为 text 类型消息段保存的内容
-            std::string cq_code; // 不包含 [CQ: 和 ] 的 CQ 码内容, 如 image,file=abc.jpg
-
-            const auto save_temp_text = [&] {
-                if (!temp_text.empty()) this->push_back(MessageSegment::text(unescape(temp_text)));
-                temp_text.clear();
-                cq_code.clear();
-            };
-
-            const auto save_cq_code = [&] {
-                std::istringstream iss(cq_code);
-                std::string type, param;
-                std::map<std::string, std::string> data;
-                getline(iss, type, ','); // 读取功能名
-                while (iss) {
-                    getline(iss, param, ','); // 读取一个参数
-                    string_trim(param);
-                    if (param.empty()) continue;
-                    const auto eq_pos = param.find('=');
-                    data.emplace(
-                        std::string(param.begin(), param.begin() + eq_pos),
-                        eq_pos != std::string::npos ? std::string(param.begin() + eq_pos + 1, param.end()) : "");
-                    param.clear();
-                }
-                this->push_back(MessageSegment{std::move(type), std::move(data)});
-                cq_code.clear();
-                temp_text.clear();
-            };
-
-            /*
-              状态图:
-                 +---+            +---+
-                 |   |            |   |
-                 | other          | other
-                 v   |            v   |
-              +--+-+ |         +--+-+ |      +----+
-              | S0 +-+--[CQ:-->+ S1 +-+--]-->+ SF |
-              +--+-+           +--+-+        +----+
-                 ^                |
-                 |                |
-                 +---[CQ:-back----+
-            */
-            while (has_next()) {
-                const auto ch = next();
-                switch (state) {
-                case S0: // 处理纯文本或 CQ 码开头
-                    if (is_cq_code_begin(ch)) {
-                        // 潜在的 CQ 码开始
-                        save_temp_text();
-                        temp_text += "[CQ:";
-                        move_rel(+3); // 跳过 CQ:
-                        state = S1;
-                    } else {
-                        temp_text += ch;
-                    }
+            container_type cont;
+            auto work_pos = msg_str.begin();
+            while (!is_end(work_pos)) {
+                // 不属于CQ码的"["和"]"在CQ信息中总是会escape为"&#91"和"&#93"，算是好处理的地方
+                auto cq_head_pos = find_char(work_pos, '[');
+                if (is_end(cq_head_pos)) {
+                    cont.push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
                     break;
-                case S1: // 处理 CQ 码内容
-                    if (is_cq_code_begin(ch)) {
-                        move_rel(-1); // 回退 [
-                        state = S0; // 回到 S0
-                    } else if (ch == ']') {
-                        // CQ 码结束
-                        save_cq_code();
-                        state = S0;
-                    } else {
-                        cq_code += ch;
-                        temp_text += ch;
-                    }
-                    break;
+                } else {
+                    if (::std::distance(work_pos, cq_head_pos) > 0)
+                        cont.push_back(MessageSegment::text(::std::string(work_pos, cq_head_pos)));
+
+                    // 由于可以从用户指定的字符串构建，所以有可能先遇到'['
+                    auto cq_tail_pos = ::std::find_if(
+                        ::std::next(cq_head_pos), msg_str.end(), [&](char w) -> bool { return w == '[' || w == ']'; });
+
+                    if (!is_end(cq_tail_pos) && *cq_tail_pos == ']') cq_tail_pos = ::std::next(cq_tail_pos);
+
+                    // 如果先遇到'['，会发生异常，Message会保持空容器
+                    cont.push_back(MessageSegment::fromCQCodeNoCheck(::std::string(cq_head_pos, cq_tail_pos)));
+                    work_pos = cq_tail_pos;
                 }
             }
-            save_temp_text(); // 保存剩余的临时文本
-            this->reduce();
+            // fromCQCodeNoCheck可能抛出，使用swap来保证强异常安全
+            this->swap(cont);
         }
 
         // 将消息段转换为 Message 对象
-        Message(const MessageSegment &seg) {
-            this->push_back(seg);
+        Message(MessageSegment seg) {
+            this->push_back(::std::move(seg));
         }
 
         // 将 Message 对象转换为字符串形式的消息
-        operator std::string() const {
-            return std::accumulate(this->begin(), this->end(), std::string(), [](const auto &seg1, const auto &seg2) {
-                return std::string(seg1) + std::string(seg2);
-            });
+        operator std::string() const noexcept {
+            ::std::ostringstream oss;
+            for (auto &seg : *this) {
+                oss << ::std::string(seg);
+            }
+            return oss.str();
         }
 
         // 向指定主体发送消息
@@ -287,12 +435,9 @@ namespace cq::message {
         std::string extract_plain_text() const {
             std::string result;
             for (const auto &seg : *this) {
-                if (seg.type == "text") {
-                    result += seg.data.at("text") + " ";
+                if (seg.type() == MessageSegment::SegTypes::text) {
+                    result += seg.plain_text();
                 }
-            }
-            if (!result.empty()) {
-                result.erase(result.end() - 1); // remove the trailing space
             }
             return result;
         }
@@ -309,67 +454,73 @@ namespace cq::message {
 
         // 合并相邻的 text 消息段
         void reduce() {
-            if (this->empty()) {
-                return;
-            }
+            if (this->empty()) return;
 
-            auto last_seg_it = this->begin();
-            for (auto it = this->begin(); ++it != this->end();) {
-                if (it->type == "text" && last_seg_it->type == "text" && it->data.find("text") != it->data.end()
-                    && last_seg_it->data.find("text") != last_seg_it->data.end()) {
-                    // found adjacent "text" segments
-                    last_seg_it->data["text"] += it->data["text"];
-                    // remove the current element and continue
-                    this->erase(it);
-                    it = last_seg_it;
-                } else {
-                    last_seg_it = it;
+            auto iter_last = this->begin();
+
+            while (iter_last != this->end()) {
+                iter_last = ::std::find_if(iter_last, this->end(), [](auto &val) -> bool {
+                    return val.type() == MessageSegment::SegTypes::text;
+                });
+                if (iter_last == this->end()) break;
+
+                std::string sum = iter_last->plain_text();
+                auto iter_this = ::std::next(iter_last);
+
+                while (iter_this != this->end() && iter_this->type() == MessageSegment::SegTypes::text) {
+                    sum += iter_this->plain_text();
+                    this->erase(iter_this);
+                    iter_this = ::std::next(iter_last);
                 }
-            }
-
-            if (this->size() == 1 && this->front().type == "text" && this->extract_plain_text().empty()) {
-                this->clear(); // the only item is an empty text segment, we should remove it
+                if (iter_last->plain_text().size() != sum.size()) *iter_last = MessageSegment::text(sum);
+                iter_last = iter_this;
             }
         }
 
-        Message &operator+=(const Message &other) {
-            this->insert(this->end(), other.begin(), other.end());
-            this->reduce();
+        // 连接另一个Message
+        inline Message &operator+=(Message other) {
+            auto start = other.begin();
+            if (!this->empty() && !other.empty() && this->back().type() == other.front().type()
+                && this->back().type() == MessageSegment::SegTypes::text) {
+                this->back() = MessageSegment::text(this->back().plain_text() + other.front().plain_text());
+                ::std::advance(start, 1);
+            }
+            this->splice(this->end(), other, start, other.end());
             return *this;
         }
 
-        template <typename T>
-        Message &operator+=(const T &other) {
-            return this->operator+=(Message(other));
+        // 连接另一个MessageSegment
+        inline Message &operator+=(MessageSegment segment) {
+            this->push_back(::std::move(segment));
+            return *this;
         }
 
-        Message operator+(const Message &other) const {
-            auto result = *this;
-            result += other; // use operator+=
-            return result;
+        // 提供==语义
+        inline bool operator==(const Message &rhs) {
+            if (this->size() != rhs.size()) return false;
+            auto lhs_iter = this->begin();
+            auto rhs_iter = rhs.begin();
+            while (lhs_iter != this->end() && rhs_iter != rhs.end()) {
+                if (*lhs_iter != *rhs_iter) return false;
+                ::std::advance(lhs_iter, 1);
+                ::std::advance(rhs_iter, 1);
+            }
+            return true;
         }
 
-        template <typename T>
-        Message operator+(const T &other) const {
-            return this->operator+(Message(other));
+        // 提供!=语义
+        inline bool operator!=(const Message &rhs) {
+            return !this->operator==(rhs);
         }
     };
 
-    template <typename T>
-    inline Message operator+(const T &lhs, const Message &rhs) {
-        return Message(lhs) + rhs;
+    // 提供任何能转换到Message的对象和MessageSegment之间的连接运算
+    inline Message operator+(Message lhs, MessageSegment rhs) {
+        return lhs += ::std::move(rhs);
     }
 
-    template <typename T>
-    inline Message operator+(const MessageSegment &lhs, const T &rhs) {
-        return Message(lhs) + rhs;
-    }
-
-    inline bool operator==(const MessageSegment &lhs, const MessageSegment &rhs) {
-        return std::string(lhs) == std::string(rhs);
-    }
-
-    inline bool operator==(const Message &lhs, const Message &rhs) {
-        return std::string(lhs) == std::string(rhs);
+    // 提供任何能转换到Message的对象和Message之间的连接运算
+    inline Message operator+(Message lhs, Message rhs) {
+        return lhs += ::std::move(rhs);
     }
 } // namespace cq::message

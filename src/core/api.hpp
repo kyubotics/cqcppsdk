@@ -13,12 +13,63 @@ namespace cq {
             : RuntimeError("failed to call coolq api, error code: " + to_string(code)), code(code) {
         }
 
+        ApiError(const char *what, const int code) : RuntimeError(what), code(code) {
+        }
+
         const int code; // 错误码
 
         static const auto INVALID_DATA = 100; // 酷Q返回的数据无效
-        static const auto INVALID_TARGET = 101; // 发送目标无效
+        // static const auto INVALID_TARGET = 101; // 发送目标无效
         static const auto INVALID_ARGS = 102; // 参数无效
+        static const auto LOG_DISABLED = -5; // 日志功能未启用
+        static const auto LOG_PRIORITY_ERR = -6; // 日志优先级错误
+        static const auto DATABASE_ERR = -7; // 数据入库失败
+        static const auto INVALID_TARGET = -23; // 找不到与目标的关系，消息无法发送
+        static const auto APP_DISABLED = -997; // 应用未启用，请在应用窗中启用应用
+        static const auto UNAUTHORIZED = -998; // 应用调用在 auth 声明之外的 Api，见日志警告。在 app.json
+                                               // 中添加相应的 auth，授予应用该 Api 的调用权限。
+        static const auto UNKOWN_ERR = -1000; // 发生未知错误，由于系统限制，实际错误代码未能传递。
+
+        inline static void InvokeError(int code);
     };
+
+#define ApiErrorImpl(_ERR_CLASS_NAME, _ERR_WHAT, _ERR_ID)  \
+    struct _ERR_CLASS_NAME : ApiError {                    \
+        _ERR_CLASS_NAME() : ApiError(_ERR_WHAT, _ERR_ID) { \
+        }                                                  \
+    }
+
+    ApiErrorImpl(ApiErrorInvalidData, "Failed to call coolq api (INVALID_DATA).", INVALID_DATA);
+    ApiErrorImpl(ApiErrorInvalidTarget, "Message sent to invalid target.", INVALID_TARGET);
+    ApiErrorImpl(ApiErrorInvalidArgs, "Arguments is not valid.", INVALID_ARGS);
+    ApiErrorImpl(ApiErrorLogDisabled, "Log is disabled.", LOG_DISABLED);
+    ApiErrorImpl(ApiErrorLogPriority, "Log priority error.", LOG_PRIORITY_ERR);
+
+    ApiErrorImpl(ApiErrorDatabaseErr, "Database error.", DATABASE_ERR);
+    ApiErrorImpl(ApiErrorAppDisabled, "App is disabled.", APP_DISABLED);
+    ApiErrorImpl(ApiErrorUnauthorized, "App is not authorized.", UNAUTHORIZED);
+    ApiErrorImpl(ApiErrorUnkownErr, "An unexpeted error has occurred.", UNKOWN_ERR);
+
+#undef ApiErrorImpl
+
+    inline void ApiError::InvokeError(int code) {
+        switch (code) {
+        case LOG_DISABLED:
+            throw ApiErrorLogDisabled();
+        case LOG_PRIORITY_ERR:
+            throw ApiErrorLogPriority();
+        case DATABASE_ERR:
+            throw ApiErrorDatabaseErr();
+        case APP_DISABLED:
+            throw ApiErrorAppDisabled();
+        case INVALID_TARGET:
+            throw ApiErrorInvalidTarget();
+        case UNAUTHORIZED:
+            throw ApiErrorUnauthorized();
+        case UNKOWN_ERR:
+            throw ApiErrorUnkownErr();
+        }
+    }
 
     void _init_api();
 
@@ -49,7 +100,7 @@ namespace cq {
         if (target.user_id.has_value()) {
             return send_private_message(target.user_id.value(), message);
         }
-        throw ApiError(ApiError::INVALID_TARGET);
+        throw ApiErrorInvalidTarget();
     }
 
     // 撤回消息(可撤回自己 2 分钟内发的消息和比自己更低权限的群成员发的消息)
